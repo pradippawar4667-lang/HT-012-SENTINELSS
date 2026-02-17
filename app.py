@@ -165,7 +165,7 @@ HTML_TEMPLATE = """
             
             <div class="metrics-container">
                 <div class="metric-box">
-                    <div class="metric-title">Flight Dynamics (Speed)</div>
+                    <div class="metric-title">Flight Dynamics (Rhythm)</div>
                     <div class="visualizer" id="vis-flight"></div>
                 </div>
                 <div class="metric-box">
@@ -235,7 +235,7 @@ HTML_TEMPLATE = """
             mode = newMode;
             resetUI();
             if(mode === 'train') instrText.innerText = "STEP 1: Train your unique pattern (Type naturally)";
-            if(mode === 'verify') instrText.innerText = "STEP 2: Verify Identity (Type again)";
+            if(mode === 'verify') instrText.innerText = "STEP 2: Verify Identity (Type naturally - Speed doesn't matter)";
             status.innerText = mode.toUpperCase() + " MODE ACTIVE";
             status.style.color = mode === 'train' ? 'var(--primary)' : '#fff';
         }
@@ -310,7 +310,7 @@ HTML_TEMPLATE = """
                 return;
             }
 
-            status.innerText = "⏳ Processing Multi-Dimensional Vectors...";
+            status.innerText = "⏳ Analyzing Rhythm & Relative Dynamics...";
             
             const response = await fetch('/analyze', {
                 method: 'POST',
@@ -343,7 +343,7 @@ HTML_TEMPLATE = """
                 resultArea.innerHTML = `<h1>🔓 ACCESS GRANTED</h1>
                 <p>Trust Score: <b>${data.score}%</b></p>
                 <div style="font-size:0.8rem; margin-top:5px; color:#aaa">
-                    Rhythm Match: High | Pressure Match: High
+                    Rhythm Matched! (Speed variance normalized)
                 </div>`;
             } else {
                 resultArea.className = 'fail';
@@ -437,22 +437,32 @@ def analyze():
         if not user_profile["trained"]:
             return jsonify({"status": "denied", "score": 0, "reason": "Model not trained yet!"})
 
-        # --- DUAL LAYER VERIFICATION ---
+        # --- DUAL LAYER VERIFICATION (With Normalization) ---
         
-        # Layer 1: Flight Time Analysis
+        # Layer 1: Flight Time Analysis (RHYTHM)
         curr_flight = np.array(flight_times)
         ref_flight = np.array(user_profile["flight_avg"])
         min_len_f = min(len(curr_flight), len(ref_flight))
         
-        flight_diff = np.mean(np.abs(curr_flight[:min_len_f] - ref_flight[:min_len_f]))
+        # Normalize: Remove 'Average Speed' bias to check 'Relative Rhythm'
+        # Formula: Vector - Mean(Vector)
+        curr_f_norm = curr_flight[:min_len_f] - np.mean(curr_flight)
+        ref_f_norm = ref_flight[:min_len_f] - np.mean(ref_flight)
+        
+        # Compare Patterns
+        flight_diff = np.mean(np.abs(curr_f_norm - ref_f_norm))
         flight_score = max(0, 100 - flight_diff)
 
-        # Layer 2: Hold Time Analysis
+        # Layer 2: Hold Time Analysis (STYLE)
         curr_hold = np.array(hold_times)
         ref_hold = np.array(user_profile["hold_avg"])
         min_len_h = min(len(curr_hold), len(ref_hold))
         
-        hold_diff = np.mean(np.abs(curr_hold[:min_len_h] - ref_hold[:min_len_h]))
+        # Normalize Hold Times too
+        curr_h_norm = curr_hold[:min_len_h] - np.mean(curr_hold)
+        ref_h_norm = ref_hold[:min_len_h] - np.mean(ref_hold)
+        
+        hold_diff = np.mean(np.abs(curr_h_norm - ref_h_norm))
         hold_score = max(0, 100 - hold_diff)
 
         # Combined Trust Score (Weighted)
@@ -463,26 +473,25 @@ def analyze():
         flight_var = np.std(curr_flight)
         hold_var = np.std(curr_hold)
         
-        if is_bot or (flight_var < 5 and hold_var < 5):
+        if is_bot or (flight_var < 2 and hold_var < 2):
             return jsonify({
                 "status": "denied",
-                "score": 2,
-                "reason": "⚠️ BOT DETECTED: Typing is too perfect (Robotic Behavior)."
+                "score": 5,
+                "reason": "⚠️ Robotic Behavior Detected (Zero Variance)"
             })
         
-        elif final_score > 60:
+        elif final_score > 55: # Slightly relaxed threshold for normalization
             return jsonify({
                 "status": "verified",
                 "score": final_score
             })
         else:
-            reason = "Typing Speed/Rhythm changed" if flight_score < hold_score else "Key Hold Time (Pressure) changed"
+            reason = "Typing Rhythm (Pattern) changed" if flight_score < hold_score else "Key Hold Pattern changed"
             return jsonify({
                 "status": "denied",
                 "score": final_score,
-                "reason": f"IDENTITY MISMATCH: Your {reason}"
+                "reason": f"IDENTITY MISMATCH: {reason}"
             })
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
-
