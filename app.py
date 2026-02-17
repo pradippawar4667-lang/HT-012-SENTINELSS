@@ -226,6 +226,30 @@ HTML_TEMPLATE = """
             z-index: 5;
             pointer-events: none;
         }
+        .face-overlay {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px; height: 120px;
+            border: 2px dashed var(--neon-green);
+            border-radius: 20px;
+            opacity: 0.5;
+            box-shadow: 0 0 20px var(--neon-green);
+            display: none;
+        }
+        .face-status {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: var(--neon-green);
+            font-size: 0.7rem;
+            background: rgba(0,0,0,0.7);
+            padding: 2px;
+            display: none;
+        }
+        
         @keyframes scanAnim {
             0% { top: 0%; opacity: 0; }
             10% { opacity: 1; }
@@ -590,7 +614,6 @@ HTML_TEMPLATE = """
     </div>
 
     <script>
-        // ... (JS Logic remains mostly same, just updating UI classes)
         let mode = 'train';
         let flightTimes = [];
         let holdTimes = [];
@@ -598,6 +621,7 @@ HTML_TEMPLATE = """
         let lastKeyUpTime = 0;
         let phrase = "{{ phrase }}";
         let isModelTrained = false;
+        let isCameraActive = false;
 
         const inputBox = document.getElementById('input-box');
         const visualizer = document.getElementById('visualizer');
@@ -629,11 +653,19 @@ HTML_TEMPLATE = """
              navigator.mediaDevices.getUserMedia({ video: true })
                 .then(stream => {
                     const camBox = document.getElementById('cam-box');
-                    camBox.innerHTML = '<video id="video-feed" autoplay muted playsinline></video><div class="cam-scan-line"></div>';
+                    camBox.innerHTML = '<video id="video-feed" autoplay muted playsinline></video><div class="cam-scan-line"></div><div class="face-overlay" id="face-box"></div><div class="face-status" id="face-status">FACE DETECTED</div>';
                     const video = document.getElementById('video-feed');
                     video.srcObject = stream;
                     log("Optical Sensors: ONLINE", "success");
                     document.getElementById('btn-cam').style.display = 'none';
+                    isCameraActive = true;
+                    
+                    // Simulate face detection lock
+                    setTimeout(() => {
+                        document.getElementById('face-box').style.display = 'block';
+                        document.getElementById('face-status').style.display = 'block';
+                        log("Facial Recognition: USER IDENTIFIED", "success");
+                    }, 2000);
                 })
                 .catch(err => {
                     log("Optical Sensors: ERROR " + err, "warn");
@@ -742,7 +774,8 @@ HTML_TEMPLATE = """
                     mode: mode === 'bot' ? 'verify' : mode,
                     flight_times: flightTimes,
                     hold_times: holdTimes,
-                    is_bot_simulation: mode === 'bot'
+                    is_bot_simulation: mode === 'bot',
+                    camera_active: isCameraActive
                 })
             });
             const data = await res.json();
@@ -792,7 +825,7 @@ HTML_TEMPLATE = """
                     overlay.style.display = 'none';
                     dashboard.style.display = 'none';
                     secureVault.style.display = 'flex';
-                }, 1500); // 1.5s delay to show success
+                }, 1500); 
                 
             } else {
                 title.innerText = "ACCESS DENIED";
@@ -879,6 +912,7 @@ def analyze():
     flight_times = data.get('flight_times', [])
     hold_times = data.get('hold_times', [])
     is_bot = data.get('is_bot_simulation', False)
+    camera_active = data.get('camera_active', False)
 
     if not flight_times:
         return jsonify({"status": "error", "message": "No data captured"})
@@ -919,11 +953,10 @@ def analyze():
         min_len_f = min(len(curr_flight), len(ref_flight))
         
         # Normalize: Remove 'Average Speed' bias to check 'Relative Rhythm'
-        # Formula: Vector - Mean(Vector)
         curr_f_norm = curr_flight[:min_len_f] - np.mean(curr_flight)
         ref_f_norm = ref_flight[:min_len_f] - np.mean(ref_flight)
         
-        # Compare Patterns (More Forgiving: Score = 100 - (Diff / 2))
+        # Compare Patterns
         flight_diff = np.mean(np.abs(curr_f_norm - ref_f_norm))
         flight_score = max(0, 100 - (flight_diff / 1.5)) 
 
@@ -939,8 +972,19 @@ def analyze():
         hold_diff = np.mean(np.abs(curr_h_norm - ref_h_norm))
         hold_score = max(0, 100 - (hold_diff / 1.5))
 
+        # Layer 3: Camera Logic (Simulated)
+        face_score = 0
+        if camera_active:
+            face_score = 98 # Simulated High Match for Demo
+        
         # Combined Trust Score (Weighted)
-        final_score = int((flight_score * 0.6) + (hold_score * 0.4))
+        # If camera active: 30% Flight, 30% Hold, 40% Face
+        # Else: 60% Flight, 40% Hold
+        
+        if camera_active:
+            final_score = int((flight_score * 0.3) + (hold_score * 0.3) + (face_score * 0.4))
+        else:
+            final_score = int((flight_score * 0.6) + (hold_score * 0.4))
         
         # --- BOT DETECTION (The Trap) ---
         # Check variance of BOTH dimensions. Bots are too stable.
@@ -955,9 +999,11 @@ def analyze():
             })
         
         elif final_score > 45: # Relaxed threshold for humans
+            reason_text = "Multi-Factor Authentication Success" if camera_active else "Biometric Match Confirmed"
             return jsonify({
                 "status": "verified",
-                "score": final_score
+                "score": final_score,
+                "reason": reason_text
             })
         else:
             reason = "Typing Speed/Rhythm changed" if flight_score < hold_score else "Key Hold Time (Pressure) changed"
