@@ -101,6 +101,60 @@ HTML_TEMPLATE = """
             position: relative;
         }
 
+        /* --- SECURE VAULT (HIDDEN SCREEN) --- */
+        .secure-vault {
+            display: none; /* Initially Hidden */
+            height: 100%;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            animation: fadeIn 1s ease;
+            width: 100%;
+            background: radial-gradient(circle, rgba(0, 255, 157, 0.05) 0%, transparent 70%);
+        }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        .vault-container {
+            border: 2px solid var(--neon-green);
+            padding: 40px;
+            border-radius: 20px;
+            background: rgba(10, 20, 30, 0.9);
+            box-shadow: 0 0 50px rgba(0, 255, 157, 0.1);
+            max-width: 900px;
+            width: 90%;
+            backdrop-filter: blur(10px);
+        }
+
+        .vault-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .file-card {
+            border: 1px solid var(--neon-green);
+            padding: 20px;
+            color: var(--neon-green);
+            font-family: 'Orbitron';
+            cursor: pointer;
+            transition: 0.3s;
+            background: rgba(0, 255, 157, 0.05);
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .file-card:hover {
+            background: var(--neon-green);
+            color: #000;
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0, 255, 157, 0.3);
+        }
+        .file-icon { font-size: 1.5rem; }
+
         .panel {
             background: var(--panel-bg);
             border: var(--glass-border);
@@ -357,6 +411,7 @@ HTML_TEMPLATE = """
         </div>
     </header>
 
+    <!-- MAIN DASHBOARD -->
     <div class="dashboard">
         
         <!-- LEFT PANEL: STATS -->
@@ -427,6 +482,47 @@ HTML_TEMPLATE = """
 
     </div>
 
+    <!-- SECRET VAULT (HIDDEN UNTIL VERIFIED) -->
+    <div class="secure-vault" id="secure-vault">
+        <div class="vault-container">
+            <h1 style="color: var(--neon-green); font-family: 'Orbitron'; font-size: 3rem; margin-bottom: 10px;">TOP SECRET CLEARANCE</h1>
+            <p style="color: #aaa; letter-spacing: 2px;">IDENTITY CONFIRMED. WELCOME, COMMANDER.</p>
+            
+            <div class="vault-grid">
+                <div class="file-card">
+                    <span class="file-icon">📁</span>
+                    <div>
+                        <div style="font-weight: bold;">NUCLEAR LAUNCH CODES</div>
+                        <div style="font-size: 0.7rem; color: #666;">Encrypted: AES-512</div>
+                    </div>
+                </div>
+                <div class="file-card">
+                    <span class="file-icon">📁</span>
+                    <div>
+                        <div style="font-weight: bold;">AREA 51 BLUEPRINTS</div>
+                        <div style="font-size: 0.7rem; color: #666;">Classification: COSMIC</div>
+                    </div>
+                </div>
+                <div class="file-card">
+                    <span class="file-icon">📁</span>
+                    <div>
+                        <div style="font-weight: bold;">OFFSHORE ACCOUNTS</div>
+                        <div style="font-size: 0.7rem; color: #666;">Swiss Bank Node #9</div>
+                    </div>
+                </div>
+                <div class="file-card">
+                    <span class="file-icon">📁</span>
+                    <div>
+                        <div style="font-weight: bold;">PROJECT GHOST</div>
+                        <div style="font-size: 0.7rem; color: #666;">Status: ACTIVE</div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="cyber-btn" style="margin-top: 50px; border-color: var(--neon-pink); color: var(--neon-pink);" onclick="logout()">🔒 LOCK SYSTEM & LOGOUT</button>
+        </div>
+    </div>
+
     <!-- RESULT POPUP -->
     <div id="result-overlay">
         <span id="res-icon" class="res-icon">🔒</span>
@@ -458,6 +554,8 @@ HTML_TEMPLATE = """
         const term = document.getElementById('terminal-logs');
         const modeDisplay = document.getElementById('mode-display');
         const modelStatus = document.getElementById('model-status');
+        const dashboard = document.querySelector('.dashboard');
+        const secureVault = document.getElementById('secure-vault');
         
         // Init Visualizer
         for(let i=0; i<30; i++){
@@ -620,6 +718,15 @@ HTML_TEMPLATE = """
                 icon.innerText = "🔓";
                 bar.style.background = "var(--neon-green)";
                 log(`Identity Verified. Trust Score: ${data.score}%`, "success");
+                
+                // --- UNLOCK VAULT ---
+                setTimeout(() => {
+                    overlay.classList.remove('active');
+                    overlay.style.display = 'none';
+                    dashboard.style.display = 'none';
+                    secureVault.style.display = 'flex';
+                }, 1500); // 1.5s delay to show success
+                
             } else {
                 title.innerText = "ACCESS DENIED";
                 title.style.color = "var(--neon-pink)";
@@ -647,6 +754,13 @@ HTML_TEMPLATE = """
                 document.getElementById('score-bar').style.width = '0%';
             }, 300);
             resetUI();
+        }
+
+        function logout() {
+            secureVault.style.display = 'none';
+            dashboard.style.display = 'grid';
+            resetUI();
+            log("User Logged Out. System Secured.", "info");
         }
 
         function simulateBot() {
