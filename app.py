@@ -7,237 +7,382 @@ from flask import Flask, render_template_string, request, jsonify
 app = Flask(__name__)
 TARGET_PHRASE = "ghost auth is the future"
 
-# --- HTML/CSS/JS UI ---
+# --- HTML/CSS/JS UI (CREATIVE DASHBOARD) ---
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GHOST-AUTH | Advanced Core</title>
+    <title>GHOST-AUTH | Cyber Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #00f3ff;
-            --secondary: #7000ff;
-            --bg: #050510;
-            --panel: #0a0a1a;
-            --danger: #ff0055;
-            --success: #00ff9d;
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff0055;
+            --neon-green: #00ff9d;
+            --bg-dark: #050505;
+            --panel-bg: rgba(10, 20, 30, 0.85);
+            --border-color: rgba(0, 243, 255, 0.3);
         }
+        
+        * { box-sizing: border-box; }
+
         body {
-            background-color: var(--bg);
+            background-color: var(--bg-dark);
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
             color: #fff;
-            font-family: 'Courier New', monospace;
+            font-family: 'Share Tech Mono', monospace;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
+        }
+
+        /* --- HEADER --- */
+        header {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            overflow-x: hidden;
+            padding: 15px 30px;
+            border-bottom: 2px solid var(--border-color);
+            background: rgba(0,0,0,0.8);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
         }
-        .container {
-            width: 90%;
-            max-width: 900px;
-            text-align: center;
-        }
-        h1 {
-            font-size: 3rem;
-            text-shadow: 0 0 20px var(--primary);
-            margin-bottom: 10px;
-        }
-        h1 span { color: var(--primary); }
-        .subtitle { color: #888; margin-bottom: 40px; }
         
-        .card {
-            background: var(--panel);
-            border: 1px solid #333;
-            border-radius: 15px;
-            padding: 40px;
-            box-shadow: 0 0 40px rgba(0, 243, 255, 0.05);
-            position: relative;
-            overflow: hidden;
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px var(--neon-blue);
         }
-        .card::before {
+        .logo span { color: var(--neon-blue); }
+        
+        .sys-status {
+            color: var(--neon-green);
+            font-size: 0.9rem;
+            border: 1px solid var(--neon-green);
+            padding: 5px 15px;
+            border-radius: 20px;
+            text-shadow: 0 0 5px var(--neon-green);
+            animation: blink 2s infinite;
+        }
+
+        /* --- MAIN DASHBOARD LAYOUT --- */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            height: 100%;
+            flex-grow: 1;
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            position: relative;
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel::after {
             content: '';
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 5px;
-            background: linear-gradient(90deg, var(--danger), var(--primary), var(--secondary), var(--success));
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+        }
+
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-blue);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+        }
+
+        /* --- CENTER CONSOLE --- */
+        .console-screen {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .phrase-display {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            color: #aaa;
+        }
+        .phrase-highlight {
+            color: #fff;
+            text-shadow: 0 0 10px #fff;
+            letter-spacing: 2px;
         }
 
         input[type="text"] {
-            width: 100%;
-            background: #000;
-            border: 2px solid #333;
-            color: var(--primary);
-            font-size: 1.5rem;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid var(--border-color);
+            color: var(--neon-blue);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 2rem;
             padding: 15px;
+            width: 100%;
             text-align: center;
-            border-radius: 8px;
-            margin-top: 20px;
             outline: none;
             transition: 0.3s;
-            font-family: 'Courier New', monospace;
-            letter-spacing: 2px;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+            border-radius: 5px;
         }
         input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
+            border-color: var(--neon-blue);
         }
 
-        .btn-group { margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
-        button {
-            padding: 12px 24px;
+        /* --- VISUALIZER --- */
+        .visualizer-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 60px;
+            gap: 4px;
+            margin: 30px 0;
+            width: 100%;
+        }
+        .bar {
+            width: 6px;
+            background: var(--neon-blue);
+            height: 5px;
+            transition: height 0.1s ease;
+            box-shadow: 0 0 5px var(--neon-blue);
+        }
+
+        /* --- BUTTONS --- */
+        .controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .cyber-btn {
+            background: transparent;
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 15px 30px;
+            font-family: 'Orbitron', sans-serif;
             font-size: 1rem;
-            font-weight: bold;
             cursor: pointer;
-            border: none;
-            border-radius: 5px;
             transition: 0.3s;
             text-transform: uppercase;
+            letter-spacing: 2px;
             position: relative;
             overflow: hidden;
         }
-        .btn-train { background: linear-gradient(45deg, var(--secondary), var(--primary)); color: #000; }
-        .btn-verify { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
-        .btn-bot { background: var(--danger); color: #fff; box-shadow: 0 0 15px var(--danger); }
         
-        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .cyber-btn:hover {
+            background: var(--neon-blue);
+            color: #000;
+            box-shadow: 0 0 20px var(--neon-blue);
+        }
+        
+        .btn-bot {
+            border-color: var(--neon-pink);
+            color: var(--neon-pink);
+        }
+        .btn-bot:hover {
+            background: var(--neon-pink);
+            color: #fff;
+            box-shadow: 0 0 20px var(--neon-pink);
+        }
 
-        #status { margin-top: 20px; font-weight: bold; min-height: 25px; letter-spacing: 1px; }
-        
-        /* Advanced Visualizer */
-        .metrics-container {
+        /* --- RIGHT PANEL: TERMINAL --- */
+        .terminal {
+            font-size: 0.8rem;
+            color: #aaa;
+            overflow-y: auto;
+            height: 100%;
+            text-align: left;
+        }
+        .log-entry { margin-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 2px; }
+        .log-time { color: var(--neon-blue); margin-right: 10px; }
+        .log-info { color: var(--neon-green); }
+        .log-warn { color: var(--neon-pink); }
+
+        /* --- LEFT PANEL: STATS --- */
+        .stat-row {
             display: flex;
             justify-content: space-between;
-            margin-top: 30px;
-            gap: 10px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
         }
-        .metric-box {
-            background: rgba(255,255,255,0.05);
-            padding: 10px;
-            border-radius: 8px;
-            width: 48%;
-        }
-        .metric-title { font-size: 0.8rem; color: #888; margin-bottom: 5px; text-transform: uppercase; }
-        
-        .visualizer {
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            height: 50px;
-            gap: 2px;
-        }
-        .bar { width: 4px; background: #333; transition: height 0.1s; border-radius: 2px; }
+        .stat-val { color: var(--neon-blue); font-weight: bold; }
 
-        #result-area {
+        /* --- RESULT OVERLAY --- */
+        #result-overlay {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            border: 2px solid var(--neon-blue);
+            padding: 40px;
+            text-align: center;
+            z-index: 100;
             display: none;
-            margin-top: 30px;
-            padding: 20px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
             border-radius: 10px;
-            animation: fadeIn 0.5s ease;
+            min-width: 400px;
         }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .success { background: rgba(0, 255, 157, 0.1); border: 1px solid var(--success); color: var(--success); }
-        .fail { background: rgba(255, 0, 85, 0.1); border: 1px solid var(--danger); color: var(--danger); }
         
-        .tag {
-            font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #555; color: #aaa;
-        }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>GHOST<span>-AUTH</span> <span style="font-size: 1rem; vertical-align: middle; color: #fff; border: 1px solid #fff; padding: 2px 5px; border-radius: 4px;">PRO</span></h1>
-        <p class="subtitle">Multi-Dimensional Behavioral Biometrics Engine</p>
+    <header>
+        <div class="logo">GHOST<span>-AUTH</span></div>
+        <div class="sys-status">SYSTEM ONLINE</div>
+    </header>
 
-        <div class="card">
-            <div id="instruction-text" style="color: #aaa; margin-bottom: 10px;">
-                STEP 1: Train the Python Model
+    <div class="dashboard">
+        
+        <!-- LEFT PANEL: BIOMETRIC STATS -->
+        <div class="panel">
+            <div class="panel-title">BIO-METRICS</div>
+            <div class="stat-row">
+                <span>Subject ID:</span>
+                <span class="stat-val">USER-01</span>
+            </div>
+            <div class="stat-row">
+                <span>Model Status:</span>
+                <span class="stat-val" id="model-status" style="color: #555;">UNTRAINED</span>
+            </div>
+            <div class="stat-row">
+                <span>Flight Vectors:</span>
+                <span class="stat-val" id="flight-count">0</span>
+            </div>
+            <div class="stat-row">
+                <span>Dwell Vectors:</span>
+                <span class="stat-val" id="dwell-count">0</span>
             </div>
             
-            <div style="font-size: 1.2rem; margin-bottom: 5px;">Type this phrase:</div>
-            <h2 id="target-phrase" style="letter-spacing: 2px; color: #fff;">{{ phrase }}</h2>
-
-            <input type="text" id="input-box" placeholder="Type here..." autocomplete="off">
-            
-            <div class="metrics-container">
-                <div class="metric-box">
-                    <div class="metric-title">Flight Dynamics (Rhythm)</div>
-                    <div class="visualizer" id="vis-flight"></div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-title">Dwell Dynamics (Hold Time)</div>
-                    <div class="visualizer" id="vis-hold"></div>
-                </div>
+            <div style="margin-top: auto; border: 1px solid #333; padding: 10px; text-align: center;">
+                <div style="font-size: 0.7rem; color: #555;">SECURITY LEVEL</div>
+                <div style="font-size: 2rem; color: var(--neon-green);">A+</div>
             </div>
-
-            <div id="status"></div>
-
-            <div class="btn-group">
-                <button class="btn-train" onclick="setMode('train')">1. Train Pattern</button>
-                <button class="btn-verify" onclick="attemptVerify()">2. Verify Identity</button>
-                <button class="btn-bot" onclick="attemptBot()">3. Bot Attack Simulation</button>
-            </div>
-
-            <div id="result-area"></div>
         </div>
+
+        <!-- CENTER PANEL: INTERACTION CONSOLE -->
+        <div class="panel">
+            <div class="panel-title" id="mode-display">MODE: TRAINING</div>
+            
+            <div class="console-screen">
+                <div class="phrase-display">
+                    Passphrase Required:<br>
+                    <span class="phrase-highlight">{{ phrase }}</span>
+                </div>
+
+                <input type="text" id="input-box" placeholder="AWAITING INPUT..." autocomplete="off">
+                
+                <div class="visualizer-container" id="visualizer">
+                    <!-- JS will fill bars -->
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="cyber-btn" onclick="setMode('train')">Initialize / Train</button>
+                <button class="cyber-btn" onclick="attemptVerify()">Verify Identity</button>
+                <button class="cyber-btn btn-bot" onclick="attemptBot()">Simulate Hack</button>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: LIVE LOGS -->
+        <div class="panel">
+            <div class="panel-title">SYSTEM LOGS</div>
+            <div class="terminal" id="terminal-logs">
+                <div class="log-entry"><span class="log-time">10:00:01</span> System Boot Sequence...</div>
+                <div class="log-entry"><span class="log-time">10:00:02</span> Loading Numpy Core...</div>
+                <div class="log-entry"><span class="log-time">10:00:03</span> Ready for Enrollment.</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- RESULT POPUP -->
+    <div id="result-overlay">
+        <h1 id="res-title" style="margin: 0 0 10px 0;">ACCESS GRANTED</h1>
+        <p id="res-desc" style="color: #aaa;">Identity Verified Successfully</p>
+        <h2 id="res-score" style="font-size: 3rem; margin: 20px 0; color: var(--neon-green);">98%</h2>
+        <button class="cyber-btn" onclick="closeResult()">CLOSE</button>
     </div>
 
     <script>
         let mode = 'train';
         let flightTimes = [];
         let holdTimes = [];
+        let keyDownMap = {};
         let lastKeyUpTime = 0;
-        let keyDownMap = {}; // Tracks when a key was pressed
         let phrase = "{{ phrase }}";
-        let isModelTrained = false; 
-        
-        const inputBox = document.getElementById('input-box');
-        const visFlight = document.getElementById('vis-flight');
-        const visHold = document.getElementById('vis-hold');
-        const status = document.getElementById('status');
-        const resultArea = document.getElementById('result-area');
-        const instrText = document.getElementById('instruction-text');
+        let isModelTrained = false;
 
-        // Setup Bars for both visualizers
-        function createBars(container) {
-            container.innerHTML = '';
-            for(let i=0; i<30; i++) {
-                let bar = document.createElement('div');
-                bar.className = 'bar';
-                bar.style.height = '4px';
-                container.appendChild(bar);
+        const inputBox = document.getElementById('input-box');
+        const visualizer = document.getElementById('visualizer');
+        const term = document.getElementById('terminal-logs');
+        const modeDisplay = document.getElementById('mode-display');
+        const modelStatus = document.getElementById('model-status');
+        
+        // Init Visualizer
+        for(let i=0; i<40; i++){
+            let d = document.createElement('div');
+            d.className = 'bar';
+            visualizer.appendChild(d);
+        }
+
+        function log(msg, type='info') {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString();
+            const div = document.createElement('div');
+            div.className = 'log-entry';
+            let colorClass = type === 'warn' ? 'log-warn' : 'log-info';
+            div.innerHTML = `<span class="log-time">${timeStr}</span> <span class="${colorClass}">${msg}</span>`;
+            term.prepend(div);
+        }
+
+        function setMode(m) {
+            mode = m;
+            resetUI();
+            if (m === 'train') {
+                modeDisplay.innerText = "MODE: TRAINING (ENROLLMENT)";
+                modeDisplay.style.color = "var(--neon-blue)";
+                log("Switched to Training Mode. Please type the phrase.");
+            } else if (m === 'verify') {
+                modeDisplay.innerText = "MODE: VERIFICATION (ACTIVE)";
+                modeDisplay.style.color = "var(--neon-green)";
+                log("Verification Mode Active. Waiting for user input.");
             }
         }
-        createBars(visFlight);
-        createBars(visHold);
 
         function attemptVerify() {
-            if (!isModelTrained) {
-                alert("⚠️ Please TRAIN the model first! (Click Step 1)");
-                return;
-            }
+            if(!isModelTrained) { alert("Train the model first!"); return; }
             setMode('verify');
         }
 
         function attemptBot() {
-            if (!isModelTrained) {
-                alert("⚠️ Please TRAIN the model first! (Click Step 1)");
-                return;
-            }
+            if(!isModelTrained) { alert("Train the model first!"); return; }
             simulateBot();
-        }
-
-        function setMode(newMode) {
-            mode = newMode;
-            resetUI();
-            if(mode === 'train') instrText.innerText = "STEP 1: Train your unique pattern (Type naturally)";
-            if(mode === 'verify') instrText.innerText = "STEP 2: Verify Identity (Type naturally - Speed doesn't matter)";
-            status.innerText = mode.toUpperCase() + " MODE ACTIVE";
-            status.style.color = mode === 'train' ? 'var(--primary)' : '#fff';
         }
 
         function resetUI() {
@@ -247,139 +392,145 @@ HTML_TEMPLATE = """
             holdTimes = [];
             lastKeyUpTime = 0;
             keyDownMap = {};
-            resultArea.style.display = 'none';
             inputBox.focus();
-            document.querySelectorAll('.bar').forEach(b => {
-                b.style.height = '4px'; 
-                b.style.background = '#333';
-            });
+            document.querySelectorAll('.bar').forEach(b => b.style.height = '5px');
         }
 
-        // --- ADVANCED KEYSTROKE CAPTURE LOGIC ---
-        inputBox.addEventListener('keydown', (e) => {
-            if(e.key === 'Enter') {
-                processData();
-                return;
-            }
-            // Record press time for Dwell calculation
-            if (!keyDownMap[e.code]) {
-                keyDownMap[e.code] = Date.now();
-            }
+        // --- INPUT LOGIC ---
+        inputBox.addEventListener('keydown', e => {
+            if(e.key === 'Enter') return;
+            if(!keyDownMap[e.code]) keyDownMap[e.code] = Date.now();
         });
 
-        inputBox.addEventListener('keyup', (e) => {
-            let currTime = Date.now();
+        inputBox.addEventListener('keyup', e => {
+            let now = Date.now();
             
-            // 1. Calculate Dwell Time (Hold Time)
-            if (keyDownMap[e.code]) {
-                let holdTime = currTime - keyDownMap[e.code];
-                holdTimes.push(holdTime);
-                updateVisualizer(visHold, holdTime, 2.0); // Visualize Hold
+            // Hold Time
+            if(keyDownMap[e.code]) {
+                let hold = now - keyDownMap[e.code];
+                holdTimes.push(hold);
+                updateVis(hold);
                 delete keyDownMap[e.code];
             }
 
-            // 2. Calculate Flight Time (Latency between keys)
-            if (lastKeyUpTime !== 0) {
-                let flightTime = currTime - lastKeyUpTime;
-                flightTimes.push(flightTime);
-                updateVisualizer(visFlight, flightTime, 1.0); // Visualize Flight
+            // Flight Time
+            if(lastKeyUpTime !== 0) {
+                let flight = now - lastKeyUpTime;
+                flightTimes.push(flight);
             }
-            lastKeyUpTime = currTime;
-            
-            if (inputBox.value.length === phrase.length) {
-                setTimeout(processData, 200);
+            lastKeyUpTime = now;
+
+            if(inputBox.value.length === phrase.length) {
+                log("Phrase complete. Processing...", "info");
+                processData();
             }
         });
 
-        function updateVisualizer(container, val, scale) {
-            const bars = container.querySelectorAll('.bar');
+        function updateVis(val) {
+            const bars = document.querySelectorAll('.bar');
             for(let i=0; i<bars.length-1; i++) {
                 bars[i].style.height = bars[i+1].style.height;
-                bars[i].style.background = bars[i+1].style.background;
+                bars[i].style.boxShadow = bars[i+1].style.boxShadow;
             }
-            let lastBar = bars[bars.length-1];
-            let h = Math.min(val * scale, 45);
-            lastBar.style.height = Math.max(h, 4) + 'px';
-            lastBar.style.background = mode === 'train' ? 'var(--primary)' : (mode === 'bot' ? 'var(--danger)' : '#fff');
+            let last = bars[bars.length-1];
+            let h = Math.min(val * 2, 55);
+            last.style.height = h + 'px';
+            
+            let color = mode === 'bot' ? 'var(--neon-pink)' : 'var(--neon-blue)';
+            last.style.background = color;
+            last.style.boxShadow = `0 0 10px ${color}`;
         }
 
         async function processData() {
-            if (inputBox.value !== phrase) {
-                status.innerText = "❌ TYPO DETECTED! Type exactly as shown.";
-                status.style.color = "var(--danger)";
+            if(inputBox.value !== phrase) {
+                log("Typo Detected. Resetting...", "warn");
+                resetUI();
                 return;
             }
 
-            status.innerText = "⏳ Analyzing Rhythm & Relative Dynamics...";
-            
-            const response = await fetch('/analyze', {
+            const res = await fetch('/analyze', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
-                    mode: mode === 'bot' ? 'verify' : mode, 
+                    mode: mode === 'bot' ? 'verify' : mode,
                     flight_times: flightTimes,
                     hold_times: holdTimes,
                     is_bot_simulation: mode === 'bot'
                 })
             });
-            
-            const data = await response.json();
-            showResult(data);
+            const data = await res.json();
+            handleResult(data);
         }
 
-        function showResult(data) {
-            resultArea.style.display = 'block';
-            if (data.status === 'trained') {
-                isModelTrained = true; 
-                resultArea.className = 'success';
-                resultArea.innerHTML = `<h3>✅ BIO-PROFILE CREATED</h3><p>${data.message}</p>
-                <div style="margin-top:10px; font-size:0.8rem; opacity:0.8">
-                    <span class="tag">Flight Vectors: ${data.details.flight_points}</span>
-                    <span class="tag">Dwell Vectors: ${data.details.hold_points}</span>
-                </div>`;
-                setTimeout(() => setMode('verify'), 2000);
-            } else if (data.status === 'verified') {
-                resultArea.className = 'success';
-                resultArea.innerHTML = `<h1>🔓 ACCESS GRANTED</h1>
-                <p>Trust Score: <b>${data.score}%</b></p>
-                <div style="font-size:0.8rem; margin-top:5px; color:#aaa">
-                    Rhythm Matched! (Speed variance normalized)
-                </div>`;
+        function handleResult(data) {
+            if(data.status === 'trained') {
+                isModelTrained = true;
+                modelStatus.innerText = "ACTIVE";
+                modelStatus.style.color = "var(--neon-green)";
+                document.getElementById('flight-count').innerText = data.details.flight_points;
+                document.getElementById('dwell-count').innerText = data.details.hold_points;
+                log("Model Trained Successfully.", "info");
+                alert("Model Trained! Now click 'Verify Identity'");
+                setMode('verify');
             } else {
-                resultArea.className = 'fail';
-                resultArea.innerHTML = `<h1>🔒 ACCESS DENIED</h1>
-                <p>Trust Score: <b>${data.score}%</b></p>
-                <p style="background:rgba(0,0,0,0.3); padding:5px; border-radius:4px;">REASON: ${data.reason}</p>`;
+                showOverlay(data);
             }
+        }
+
+        function showOverlay(data) {
+            const overlay = document.getElementById('result-overlay');
+            const title = document.getElementById('res-title');
+            const desc = document.getElementById('res-desc');
+            const score = document.getElementById('res-score');
+
+            overlay.style.display = 'block';
+            
+            if(data.status === 'verified') {
+                title.innerText = "ACCESS GRANTED";
+                title.style.color = "var(--neon-green)";
+                overlay.style.borderColor = "var(--neon-green)";
+                score.style.color = "var(--neon-green)";
+                log(`Access Granted. Score: ${data.score}%`);
+            } else {
+                title.innerText = "ACCESS DENIED";
+                title.style.color = "var(--neon-pink)";
+                overlay.style.borderColor = "var(--neon-pink)";
+                score.style.color = "var(--neon-pink)";
+                log(`Access Denied. Reason: ${data.reason}`, "warn");
+            }
+            desc.innerText = data.reason || "Biometric Match Confirmed";
+            score.innerText = data.score + "%";
+        }
+
+        function closeResult() {
+            document.getElementById('result-overlay').style.display = 'none';
+            resetUI();
         }
 
         function simulateBot() {
             mode = 'bot';
             resetUI();
-            instrText.innerText = "⚠️ SIMULATION: Advanced Script Injection...";
-            status.innerText = "BOT ATTACK INITIATED...";
-            
+            modeDisplay.innerText = "ALERT: BOT ATTACK IN PROGRESS";
+            modeDisplay.style.color = "var(--neon-pink)";
+            log("Bot Script Injected...", "warn");
+            inputBox.disabled = true;
+
             let chars = phrase.split('');
             let i = 0;
-            inputBox.disabled = true;
-            
-            let botInterval = setInterval(() => {
-                if (i < chars.length) {
+            let intv = setInterval(() => {
+                if(i < chars.length) {
                     inputBox.value += chars[i];
-                    
-                    // Bot Behavior: Perfectly constant speed AND perfectly constant hold time
-                    flightTimes.push(50); 
-                    holdTimes.push(80); // Bots hold keys for exact same duration
-                    
-                    updateVisualizer(visFlight, 50, 1.0);
-                    updateVisualizer(visHold, 80, 2.0);
+                    flightTimes.push(50);
+                    holdTimes.push(80);
+                    updateVis(80);
                     i++;
                 } else {
-                    clearInterval(botInterval);
+                    clearInterval(intv);
                     processData();
                 }
-            }, 50); // Fast typing speed
+            }, 50);
         }
+
     </script>
 </body>
 </html>
@@ -486,7 +637,7 @@ def analyze():
                 "score": final_score
             })
         else:
-            reason = "Typing Rhythm (Pattern) changed" if flight_score < hold_score else "Key Hold Pattern changed"
+            reason = "Typing Speed/Rhythm changed" if flight_score < hold_score else "Key Hold Time (Pressure) changed"
             return jsonify({
                 "status": "denied",
                 "score": final_score,
