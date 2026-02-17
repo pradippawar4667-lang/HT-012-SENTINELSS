@@ -1,113 +1,507 @@
-from flask import Flask, render_template, request, jsonify
-import numpy as np
-import json
-import os
-
-app = Flask(__name__)
-
-PROFILE_PATH = "user_profile.json"
-PASSWORD = "ghost123"  # Demo password
-
-# ==============================
-# Utility Functions
-# ==============================
-
-def save_profile(profile):
-    with open(PROFILE_PATH, "w") as f:
-        json.dump(profile, f)
-
-def load_profile():
-    if not os.path.exists(PROFILE_PATH):
-        return None
-    with open(PROFILE_PATH, "r") as f:
-        return json.load(f)
-
-def calculate_l1_distance(stored, current):
-    stored_vec = np.array(stored)
-    current_vec = np.array(current)
-    return np.sum(np.abs(stored_vec - current_vec))  # L1 Norm
-
-def calculate_variance_score(data):
-    return np.std(data)
-
-# ==============================
-# Routes
-# ==============================
-
-@app.route("/")
-def index():
-    return render_template("index.html")
-
-@app.route("/register", methods=["POST"])
-def register():
-    password = request.form.get("password")
-    timings = json.loads(request.form.get("timings"))
-
-    if password != PASSWORD:
-        return jsonify({"status": "error", "message": "Wrong Password!"})
-
-    mean_vector = np.mean(np.array(timings), axis=0).tolist()
-    variance = float(np.std(timings))
-
-    profile = {
-        "vector": mean_vector,
-        "variance": variance
-    }
-
-    save_profile(profile)
-
-    return jsonify({"status": "success", "message": "Profile Created Successfully!"})
-
-
-@app.route("/login", methods=["POST"])
-def login():
-    password = request.form.get("password")
-    timings = json.loads(request.form.get("timings"))
-
-    if password != PASSWORD:
-        return jsonify({"status": "error", "message": "Wrong Password!"})
-
-    profile = load_profile()
-    if not profile:
-        return jsonify({"status": "error", "message": "No profile found. Register first."})
-
-    l1_distance = calculate_l1_distance(profile["vector"], timings)
-    variance = calculate_variance_score(timings)
-
-    # Thresholds (Tune for demo)
-    DISTANCE_THRESHOLD = 150
-    VARIANCE_THRESHOLD = 5  # Bots usually near 0
-
-    if variance < VARIANCE_THRESHOLD:
-        return jsonify({
-            "status": "blocked",
-            "reason": "Bot Detected: Typing too perfect!"
-        })
-
-    if l1_distance < DISTANCE_THRESHOLD:
-        # Adaptive Learning Update
-        new_vector = (
-            np.array(profile["vector"]) * 0.8 +
-            np.array(timings) * 0.2
-        ).tolist()
-
-        profile["vector"] = new_vector
-        save_profile(profile)
-
-        return jsonify({
-            "status": "success",
-            "message": "Authentication Successful!",
-            "distance": float(l1_distance),
-            "variance": float(variance)
-        })
-
-    return jsonify({
-        "status": "blocked",
-        "reason": "Behavior Mismatch!",
-        "distance": float(l1_distance),
-        "variance": float(variance)
-    })
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghost-Auth - Behavioral Biometrics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #141e30 0%, #243b55 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 500px;
+            padding: 30px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+            letter-spacing: 1px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        input:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .camera-preview {
+            width: 100%;
+            height: 250px;
+            background: #2d3748;
+            border-radius: 15px;
+            margin: 20px 0;
+            overflow: hidden;
+            position: relative;
+            border: 3px solid #667eea;
+        }
+        
+        #cameraFeed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .camera-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .live-badge {
+            width: 8px;
+            height: 8px;
+            background: #ff4444;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 25px 0;
+        }
+        
+        .btn {
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8, #138496);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .status-box {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+            text-align: left;
+            font-size: 0.95em;
+        }
+        
+        .success-text {
+            color: #28a745;
+            font-weight: 600;
+        }
+        
+        .error-text {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        
+        .score-container {
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .score-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        .score-meter {
+            background: #e9ecef;
+            border-radius: 20px;
+            height: 25px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .score-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.85em;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .result-card {
+            background: linear-gradient(135deg, #667eea10, #764ba210);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid #667eea30;
+        }
+        
+        .granted {
+            color: #28a745;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        
+        .denied {
+            color: #dc3545;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        
+        .features-list {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            padding: 15px 0;
+            border-top: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .feature {
+            text-align: center;
+        }
+        
+        .feature-icon {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+        
+        .feature-text {
+            font-size: 0.8em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>👻 Ghost-Auth</h1>
+        <p class="subtitle">Behavioral Biometrics Authentication</p>
+        
+        <div class="features-list">
+            <div class="feature">
+                <div class="feature-icon">⌨️</div>
+                <div class="feature-text">Typing Pattern</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📸</div>
+                <div class="feature-text">Face Recognition</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔐</div>
+                <div class="feature-text">Real-time</div>
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label>👤 Username</label>
+            <input type="text" id="username" placeholder="Enter your username">
+        </div>
+        
+        <div class="camera-preview">
+            <video id="cameraFeed" autoplay playsinline></video>
+            <div class="camera-overlay">
+                <span class="live-badge"></span>
+                <span>Live</span>
+            </div>
+        </div>
+        
+        <div class="button-grid">
+            <button class="btn btn-primary" onclick="captureFace()">
+                <span>📸</span> Capture Face
+            </button>
+            <button class="btn btn-success" onclick="startTyping()">
+                <span>⌨️</span> Typing Test
+            </button>
+            <button class="btn btn-info" onclick="createProfile()">
+                <span>👤</span> Create Profile
+            </button>
+            <button class="btn btn-warning" onclick="authenticate()">
+                <span>🔐</span> Authenticate
+            </button>
+        </div>
+        
+        <div class="status-box" id="status">
+            <span>⏳ Status: Waiting for action...</span>
+        </div>
+        
+        <div class="score-container" id="scoreContainer">
+            <div class="score-label">
+                <span>Authentication Confidence</span>
+                <span id="scorePercentage">0%</span>
+            </div>
+            <div class="score-meter">
+                <div class="score-fill" id="scoreFill" style="width: 0%">0%</div>
+            </div>
+        </div>
+        
+        <div id="result" class="result-card" style="display: none;"></div>
+    </div>
+    
+    <script>
+        const video = document.getElementById('cameraFeed');
+        let currentFaceFile = '';
+        
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        facingMode: 'user'
+                    } 
+                });
+                video.srcObject = stream;
+            } catch (err) {
+                updateStatus('❌ Camera access denied', 'error');
+                console.error(err);
+            }
+        }
+        
+        startCamera();
+        
+        async function captureFace() {
+            const username = document.getElementById('username').value;
+            if (!username) {
+                updateStatus('❌ Please enter username first!', 'error');
+                return;
+            }
+            
+            updateStatus('📸 Capturing photo...', '');
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            canvas.toBlob(async (blob) => {
+                const formData = new FormData();
+                formData.append('username', username);
+                formData.append('image', blob, 'face.jpg');
+                
+                const response = await fetch('/capture_face', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    currentFaceFile = data.filename;
+                    updateStatus('✅ ' + data.message, 'success');
+                } else {
+                    updateStatus('❌ ' + data.message, 'error');
+                }
+            }, 'image/jpeg');
+        }
+        
+        async function startTyping() {
+            const username = document.getElementById('username').value;
+            if (!username) {
+                updateStatus('❌ Please enter username first!', 'error');
+                return;
+            }
+            
+            updateStatus('⌨️ Typing test started. Please type for 10 seconds...', '');
+            
+            const response = await fetch('/start_typing', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: username })
+            });
+            
+            setTimeout(() => {
+                updateStatus('✅ Typing data collected!', 'success');
+            }, 5000);
+        }
+        
+        async function createProfile() {
+            const username = document.getElementById('username').value;
+            if (!username) {
+                updateStatus('❌ Please enter username!', 'error');
+                return;
+            }
+            
+            if (!currentFaceFile) {
+                updateStatus('❌ Please capture face first!', 'error');
+                return;
+            }
+            
+            updateStatus('👤 Creating profile...', '');
+            
+            const response = await fetch('/create_profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    username: username,
+                    face_file: currentFaceFile
+                })
+            });
+            
+            const data = await response.json();
+            updateStatus('✅ Profile created successfully! You can now authenticate.', 'success');
+        }
+        
+        async function authenticate() {
+            const username = document.getElementById('username').value;
+            if (!username) {
+                updateStatus('❌ Please enter username!', 'error');
+                return;
+            }
+            
+            document.getElementById('scoreContainer').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            
+            updateStatus('🔐 Authenticating...', '');
+            
+            const scoreFill = document.getElementById('scoreFill');
+            const scorePercentage = document.getElementById('scorePercentage');
+            
+            scoreFill.style.width = '0%';
+            scoreFill.textContent = '0%';
+            scorePercentage.textContent = '0%';
+            
+            const interval = setInterval(() => {
+                let width = parseInt(scoreFill.style.width);
+                if (width < 90) {
+                    width += 10;
+                    scoreFill.style.width = width + '%';
+                    scoreFill.textContent = width + '%';
+                    scorePercentage.textContent = width + '%';
+                }
+            }, 200);
+            
+            const response = await fetch('/authenticate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: username })
+            });
+            
+            const data = await response.json();
+            clearInterval(interval);
+            
+            scoreFill.style.width = '100%';
+            scoreFill.textContent = '100%';
+            scorePercentage.textContent = '100%';
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            
+            if (data.authenticated) {
+                scoreFill.style.background = 'linear-gradient(90deg, #28a745, #20c997)';
+                resultDiv.innerHTML = `
+                    <div class="granted">✅ ACCESS GRANTED</div>
+                    <div style="margin-top: 10px; color: #666;">Welcome back, ${username}!</div>
+                    <div style="margin-top: 5px; font-size: 0.9em;">Typing pattern & face matched successfully</div>
+                `;
+                updateStatus('✅ Access Granted!', 'success');
+            } else {
+                scoreFill.style.background = 'linear-gradient(90deg, #dc3545, #c82333)';
+                resultDiv.innerHTML = `
+                    <div class="denied">❌ ACCESS DENIED</div>
+                    <div style="margin-top: 10px; color: #666;">Behavioral patterns don't match</div>
+                    <div style="margin-top: 5px; font-size: 0.9em;">Possible intruder detected!</div>
+                `;
+                updateStatus('❌ Access Denied!', 'error');
+            }
+        }
+        
+        function updateStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            const className = type === 'success' ? 'success-text' : (type === 'error' ? 'error-text' : '');
+            statusDiv.innerHTML = `<span class="${className}">${message}</span>`;
+        }
+    </script>
+</body>
+</html>
