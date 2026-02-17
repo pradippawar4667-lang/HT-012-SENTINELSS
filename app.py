@@ -4,6 +4,8 @@ import os
 import sys
 
 # --- TRY IMPORTING MODULES WITH FRIENDLY ERRORS ---
+
+
 try:
     import numpy as np
     from flask import Flask, render_template_string, request, jsonify
@@ -14,6 +16,13 @@ except ImportError as e:
     print("pip install flask numpy")
     print("="*50 + "\n")
     sys.exit(1)
+
+# 👇 He try block baher add kar
+from biometric_project import FingerprintAuth
+
+fingerprint = FingerprintAuth()
+
+
 
 # --- CONFIGURATION ---
 app = Flask(__name__)
