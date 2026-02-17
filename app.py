@@ -1033,7 +1033,7 @@ HTML_TEMPLATE = """
     <div class="scan-lines"></div>
 
     <header>
-        <div class="brand">BIO-TRUST <span style="font-size:0.9rem; color:#888; font-weight:400;">// NEURAL SECURITY CORE v2.0</span></div>
+        <div class="brand">Ghost-Auth<span style="font-size:0.9rem; color:#888; font-weight:400;">// NEURAL SECURITY CORE v2.0</span></div>
         <div class="sys-status"><span class="status-dot"></span>SYSTEM SECURE</div>
     </header>
 
