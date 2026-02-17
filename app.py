@@ -4,8 +4,6 @@ import os
 import sys
 
 # --- TRY IMPORTING MODULES WITH FRIENDLY ERRORS ---
-
-
 try:
     import numpy as np
     from flask import Flask, render_template_string, request, jsonify
@@ -16,13 +14,6 @@ except ImportError as e:
     print("pip install flask numpy")
     print("="*50 + "\n")
     sys.exit(1)
-
-# 👇 He try block baher add kar
-from biometric_project import FingerprintAuth
-
-fingerprint = FingerprintAuth()
-
-
 
 # --- CONFIGURATION ---
 app = Flask(__name__)
@@ -35,7 +26,7 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BIO-TRUST | Face & Behavioral Defense</title>
+    <title>BIO-TRUST | Multi-Factor Defense</title>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -45,6 +36,7 @@ HTML_TEMPLATE = """
             --primary: #00f3ff;     /* Cyan */
             --success: #00ff9d;     /* Green */
             --danger: #ff0055;      /* Red */
+            --warning: #ffbd2e;     /* Yellow */
             --text-main: #e0faff;
             --border: 1px solid rgba(0, 243, 255, 0.3);
         }
@@ -116,7 +108,6 @@ HTML_TEMPLATE = """
             margin-bottom: 10px; position: relative;
             overflow: hidden; border-radius: 8px;
             box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
-            transition: 0.3s;
         }
         .cam-feed { width: 100%; height: 100%; object-fit: cover; }
         
@@ -153,10 +144,16 @@ HTML_TEMPLATE = """
             width: 100px; height: 120px;
         }
         
+        /* Second Person Box (Intruder) */
+        #face-intruder {
+            top: 50%; left: 20%; transform: translate(-50%, -50%);
+            width: 90px; height: 110px;
+            border-color: var(--danger); box-shadow: 0 0 20px var(--danger);
+        }
+
         /* Styles for Alert States */
-        .cam-container.alert { border-color: var(--danger); box-shadow: 0 0 30px var(--danger); animation: shakeCam 0.5s infinite; }
         .cam-container.alert #face-main { border-color: var(--danger); box-shadow: 0 0 20px var(--danger); }
-        
+        .cam-container.alert { border-color: var(--danger); box-shadow: 0 0 30px var(--danger); animation: shakeCam 0.5s infinite; }
         @keyframes shakeCam { 0% { transform: translate(0,0); } 25% { transform: translate(2px,2px); } 75% { transform: translate(-2px,-2px); } }
 
         .cam-status {
@@ -311,6 +308,7 @@ HTML_TEMPLATE = """
                 <div class="cam-overlay"></div>
                 <div class="face-scan-beam"></div>
                 <div id="face-main" class="face-box"></div>
+                <div id="face-intruder" class="face-box"></div> <!-- Second Box for multiple people -->
                 <div id="cam-status" class="cam-status">INITIALIZING...</div>
             </div>
             
@@ -347,7 +345,7 @@ HTML_TEMPLATE = """
                 <div class="controls">
                     <button class="btn active" id="btn-train" onclick="setMode('train')">1. ENROLL ID</button>
                     <button class="btn" id="btn-verify" onclick="setMode('verify')">2. VERIFY</button>
-                    <button class="btn btn-hack" style="border-color:#ff9900; color:#ff9900" onclick="triggerWrongFace()">3. TEST WRONG FACE</button>
+                    <button class="btn btn-hack" style="border-color:#ff9900; color:#ff9900" onclick="triggerMultiFace()">3. SIMULATE SHOULDER SURFING</button>
                 </div>
             </div>
         </div>
@@ -393,7 +391,7 @@ HTML_TEMPLATE = """
         <div style="font-size:3rem;">⚠️</div>
         <div class="danger-title" id="alert-title">DANGER</div>
         <div class="danger-title" style="font-size:2rem; margin-top:10px;" id="alert-msg">UNRECOGNIZED FACE</div>
-        <p class="danger-sub" id="alert-sub">PIRACY ALERT: UNAUTHORIZED USER</p>
+        <p class="danger-sub" id="alert-sub">PIRACY ALERT: INTRUDER DETECTED</p>
         <div style="margin-top:30px; font-family:'Share Tech Mono'; color:#aaa;">SYSTEM LOCKDOWN INITIATED...</div>
         <button class="btn" style="margin-top:30px;" onclick="location.reload()">REBOOT SYSTEM</button>
     </div>
@@ -434,7 +432,7 @@ HTML_TEMPLATE = """
         let phrase = "{{ phrase }}";
         let isModelTrained = false;
         let isFaceTrained = false;
-        let currentFace = 'user'; // 'user' or 'unknown'
+        let multiFaceMode = false;
 
         const pwdInput = document.getElementById('password-input');
         const terminal = document.getElementById('terminal');
@@ -444,7 +442,8 @@ HTML_TEMPLATE = """
         const angleDisplay = document.getElementById('angle-display');
         const angleBar = document.getElementById('angle-bar');
         const mouseScoreDisplay = document.getElementById('mouse-score');
-        const faceBox = document.getElementById('face-main');
+        const faceMain = document.getElementById('face-main');
+        const faceIntruder = document.getElementById('face-intruder');
         const btnCapture = document.getElementById('btn-capture');
         const camStatus = document.getElementById('cam-status');
         const camContainer = document.getElementById('cam-container');
@@ -453,6 +452,13 @@ HTML_TEMPLATE = """
         const alertSub = document.getElementById('alert-sub');
 
         pwdInput.placeholder = `TYPE: "${phrase}"`;
+
+        // --- SHORTCUT KEY 'M' FOR MULTI-FACE SIMULATION ---
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'm' || e.key === 'M') {
+                triggerMultiFace();
+            }
+        });
 
         // --- AUTO START CAMERA ---
         window.onload = function() {
@@ -474,7 +480,7 @@ HTML_TEMPLATE = """
                     camStatus.innerText = "CAMERA ACTIVE - MONITORING";
                     camStatus.style.color = "var(--success)";
                     log("Optical Sensors: ONLINE", "success");
-                    faceBox.style.display = 'block'; 
+                    faceMain.style.display = 'block'; 
                 })
                 .catch(err => {
                     log("Camera Error: " + err, "warn");
@@ -490,7 +496,6 @@ HTML_TEMPLATE = """
             
             setTimeout(() => {
                 isFaceTrained = true;
-                currentFace = 'user';
                 log("FACE ID MAP STORED.", "success");
                 camContainer.classList.remove('scanning');
                 btnCapture.style.display = 'none';
@@ -498,20 +503,6 @@ HTML_TEMPLATE = """
                 instruction.style.color = "var(--primary)";
                 pwdInput.focus();
             }, 2000);
-        }
-
-        function triggerWrongFace() {
-            if(!isModelTrained) { alert("Train first!"); return; }
-            log("⚠️ SIMULATION: UNKNOWN FACE DETECTED", "warn");
-            currentFace = 'unknown'; // Switch to intruder
-            camContainer.classList.add('alert');
-            camStatus.innerText = "WARNING: FACE MISMATCH";
-            camStatus.style.color = "var(--danger)";
-            
-            // Immediate Alert
-            setTimeout(() => {
-                loginFail("FACE_MISMATCH");
-            }, 800);
         }
 
         function log(msg, type='info') {
@@ -524,7 +515,7 @@ HTML_TEMPLATE = """
 
         function setMode(m) {
             mode = m;
-            currentFace = 'user'; // Reset face status
+            multiFaceMode = false;
             resetUI();
             
             document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
@@ -565,8 +556,8 @@ HTML_TEMPLATE = """
             shieldRing.style.borderColor = "var(--primary)";
             shieldRing.style.boxShadow = "0 0 30px rgba(0, 243, 255, 0.1)";
             camContainer.classList.remove('alert');
-            camStatus.innerText = "CAMERA ACTIVE - MONITORING";
-            camStatus.style.color = "var(--success)";
+            faceMain.style.borderColor = "var(--success)";
+            faceIntruder.style.display = 'none'; // Hide second face box
         }
 
         // --- KEYSTROKE & ANGLE CAPTURE ---
@@ -621,8 +612,11 @@ HTML_TEMPLATE = """
                 return;
             }
 
-            // Check Face Status
-            let isFaceMatch = (currentFace === 'user');
+            // Check if Multi-Face Mode is triggered
+            if (multiFaceMode) {
+                loginFail("MULTIPLE_FACES");
+                return;
+            }
 
             try {
                 const res = await fetch('/analyze', {
@@ -635,7 +629,7 @@ HTML_TEMPLATE = """
                         tilt_data: tiltData,
                         mouse_score: mouseEvents,
                         is_bot_simulation: false, // Standard verify
-                        face_match: isFaceMatch
+                        face_match: true
                     })
                 });
                 const data = await res.json();
@@ -672,13 +666,13 @@ HTML_TEMPLATE = """
         }
 
         function loginFail(reason) {
-            // Check for FACE MISMATCH
-            if(reason.includes("FACE") || reason === "FACE_MISMATCH") {
+            // Check for MULTIPLE FACES
+            if(reason === "MULTIPLE_FACES") {
                 dangerOverlay.style.display = 'flex';
                 alertTitle.innerText = "SECURITY ALERT";
-                alertMsg.innerText = "UNRECOGNIZED FACE";
-                alertSub.innerText = "UNAUTHORIZED USER DETECTED IN CAMERA";
-                log("CRITICAL: UNKNOWN PERSON DETECTED", "warn");
+                alertMsg.innerText = "MULTIPLE FACES DETECTED";
+                alertSub.innerText = "SHOULDER SURFING ATTEMPT IDENTIFIED";
+                log("CRITICAL: MULTIPLE PERSONS IN FRAME", "warn");
                 return;
             }
 
@@ -695,6 +689,29 @@ HTML_TEMPLATE = """
                 instruction.innerText = "RETRY AUTHENTICATION";
                 instruction.style.color = "#888";
             }, 3000);
+        }
+
+        function triggerMultiFace() {
+            if(!isModelTrained) { alert("Train first!"); return; }
+            setMode('verify');
+            
+            // Activate Multi-Face Simulation
+            multiFaceMode = true;
+            log("⚠️ WARNING: MULTIPLE FACES DETECTED IN FRAME", "warn");
+            
+            // Visual Updates
+            camContainer.classList.add('alert');
+            faceMain.style.borderColor = "var(--danger)";
+            faceIntruder.style.display = 'block'; // Show second box
+            faceIntruder.classList.add('intruder');
+            
+            // Auto-type to trigger failure
+            pwdInput.disabled = true;
+            pwdInput.value = phrase; // Correct password
+            
+            setTimeout(() => {
+                processData(); // Will fail due to multiFaceMode flag
+            }, 1500);
         }
 
     </script>
@@ -718,7 +735,7 @@ def analyze():
     tilt_data = data.get('tilt_data', [])
     face_match = data.get('face_match', True) 
 
-    if not flight_times and mode != 'train': return jsonify({"status": "error", "message": "No data"})
+    if not flight_times: return jsonify({"status": "error", "message": "No data"})
 
     if mode == 'train':
         user_profile["flight_avg"] = flight_times
@@ -729,10 +746,6 @@ def analyze():
 
     elif mode == 'verify':
         if not user_profile["trained"]: return jsonify({"status": "denied", "score": 0, "reason": "Untrained"})
-
-        # Check Face Match FIRST (Highest Priority)
-        if not face_match:
-            return jsonify({"status": "denied", "score": 0, "reason": "DANGER: UNRECOGNIZED FACE (PIRACY ALERT)"})
 
         curr_flight = np.array(flight_times)
         ref_flight = np.array(user_profile["flight_avg"])
