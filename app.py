@@ -14,41 +14,108 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GHOST-AUTH | Elite Cyber Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>GHOST-AUTH | ULTIMATE UI</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --neon-blue: #00f3ff;
             --neon-pink: #ff0055;
             --neon-purple: #bc13fe;
-            --neon-green: #00ff9d;
-            --bg-dark: #030305;
-            --panel-bg: rgba(10, 15, 25, 0.7);
-            --border-color: rgba(0, 243, 255, 0.2);
-            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --neon-gold: #ffd700;
+            --bg-dark: #020204;
+            --panel-bg: rgba(5, 10, 20, 0.65);
+            --border-color: rgba(0, 243, 255, 0.3);
         }
         
         * { box-sizing: border-box; }
 
         body {
             background-color: var(--bg-dark);
-            background-image: 
-                linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
-            background-size: 40px 40px;
             color: #fff;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'Rajdhani', sans-serif;
             margin: 0;
             height: 100vh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            animation: bgScroll 20s linear infinite;
+            perspective: 1000px;
         }
 
-        @keyframes bgScroll {
-            0% { background-position: 0 0; }
-            100% { background-position: 40px 40px; }
+        /* --- ADVANCED BACKGROUND --- */
+        .bg-animation {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(0, 243, 255, 0.05), transparent 60%),
+                linear-gradient(0deg, rgba(0,0,0,0.9), transparent),
+                repeating-linear-gradient(90deg, rgba(0, 243, 255, 0.03) 0px, rgba(0, 243, 255, 0.03) 1px, transparent 1px, transparent 50px),
+                repeating-linear-gradient(0deg, rgba(0, 243, 255, 0.03) 0px, rgba(0, 243, 255, 0.03) 1px, transparent 1px, transparent 50px);
+            z-index: -2;
+            transform: scale(1.1);
+            animation: moveGrid 30s linear infinite;
+        }
+        
+        @keyframes moveGrid {
+            0% { transform: scale(1.1) translate(0, 0) rotate(0deg); }
+            50% { transform: scale(1.15) translate(-20px, -20px) rotate(1deg); }
+            100% { transform: scale(1.1) translate(0, 0) rotate(0deg); }
+        }
+
+        /* Floating Particles (Pseudo-elements) */
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            width: 100%; height: 100%;
+            background-image: radial-gradient(white 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.1;
+            z-index: -1;
+            animation: stars 100s linear infinite;
+        }
+        body::after {
+            background-size: 100px 100px;
+            animation: stars 60s linear infinite reverse;
+            opacity: 0.2;
+        }
+        
+        @keyframes stars { from { transform: translateY(0); } to { transform: translateY(-1000px); } }
+
+        /* --- GLITCH TEXT EFFECT --- */
+        .glitch {
+            position: relative;
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            letter-spacing: 5px;
+        }
+        .glitch::before, .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-dark);
+        }
+        .glitch::before {
+            left: 2px; text-shadow: -1px 0 var(--neon-pink);
+            clip: rect(24px, 550px, 90px, 0);
+            animation: glitch-anim-1 3s infinite linear alternate-reverse;
+        }
+        .glitch::after {
+            left: -2px; text-shadow: -1px 0 var(--neon-blue);
+            clip: rect(85px, 550px, 140px, 0);
+            animation: glitch-anim-2 2s infinite linear alternate-reverse;
+        }
+        
+        @keyframes glitch-anim-1 {
+            0% { clip: rect(20px, 9999px, 80px, 0); }
+            20% { clip: rect(60px, 9999px, 10px, 0); }
+            40% { clip: rect(10px, 9999px, 90px, 0); }
+            60% { clip: rect(80px, 9999px, 20px, 0); }
+            80% { clip: rect(30px, 9999px, 70px, 0); }
+            100% { clip: rect(50px, 9999px, 60px, 0); }
+        }
+        @keyframes glitch-anim-2 {
+            0% { clip: rect(90px, 9999px, 10px, 0); }
+            100% { clip: rect(10px, 9999px, 90px, 0); }
         }
 
         /* --- HEADER --- */
@@ -56,564 +123,354 @@ HTML_TEMPLATE = """
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 40px;
-            background: rgba(3, 3, 5, 0.8);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border-color);
-            z-index: 10;
+            padding: 20px 50px;
+            background: rgba(2, 2, 4, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 5px 30px rgba(0,0,0,0.5);
+            z-index: 100;
         }
         
-        .logo {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2.2rem;
-            font-weight: 900;
-            letter-spacing: 4px;
-            background: linear-gradient(90deg, #fff, var(--neon-blue));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
-        }
+        .logo { font-size: 2.5rem; text-transform: uppercase; background: linear-gradient(to right, #fff, var(--neon-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        .sys-status {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--neon-green);
-            font-size: 0.8rem;
-            letter-spacing: 1px;
-        }
-        .status-dot {
-            width: 8px; height: 8px;
-            background: var(--neon-green);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--neon-green);
-            animation: pulseDot 2s infinite;
-        }
-
-        /* --- DASHBOARD --- */
+        /* --- DASHBOARD LAYOUT --- */
         .dashboard {
             display: grid;
-            grid-template-columns: 280px 1fr 300px;
-            gap: 25px;
+            grid-template-columns: 320px 1fr 320px;
+            gap: 30px;
             padding: 30px;
             height: 100%;
-            flex-grow: 1;
             position: relative;
         }
-
-        /* --- SECURE VAULT (HIDDEN SCREEN) --- */
-        .secure-vault {
-            display: none; /* Initially Hidden */
-            height: 100%;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            animation: fadeIn 1s ease;
-            width: 100%;
-            background: radial-gradient(circle, rgba(0, 255, 157, 0.05) 0%, transparent 70%);
-        }
-        
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-
-        .vault-container {
-            border: 2px solid var(--neon-green);
-            padding: 40px;
-            border-radius: 20px;
-            background: rgba(10, 20, 30, 0.9);
-            box-shadow: 0 0 50px rgba(0, 255, 157, 0.1);
-            max-width: 900px;
-            width: 90%;
-            backdrop-filter: blur(10px);
-        }
-
-        .vault-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-top: 40px;
-        }
-
-        .file-card {
-            border: 1px solid var(--neon-green);
-            padding: 20px;
-            color: var(--neon-green);
-            font-family: 'Orbitron';
-            cursor: pointer;
-            transition: 0.3s;
-            background: rgba(0, 255, 157, 0.05);
-            text-align: left;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .file-card:hover {
-            background: var(--neon-green);
-            color: #000;
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0, 255, 157, 0.3);
-        }
-        .file-icon { font-size: 1.5rem; }
 
         .panel {
             background: var(--panel-bg);
-            border: var(--glass-border);
-            border-radius: 16px;
+            border: 1px solid rgba(0, 243, 255, 0.1);
+            border-radius: 20px;
             padding: 25px;
-            position: relative;
             backdrop-filter: blur(15px);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 40px rgba(0,0,0,0.5);
             display: flex;
             flex-direction: column;
-            overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .panel:hover {
-            box-shadow: 0 10px 40px rgba(0, 243, 255, 0.05);
-            border-color: rgba(0, 243, 255, 0.4);
-        }
-
-        .panel-title {
-            font-family: 'Orbitron', sans-serif;
-            color: var(--neon-blue);
-            font-size: 0.9rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .panel-title::before {
-            content: '';
-            width: 4px; height: 16px;
-            background: var(--neon-blue);
-            box-shadow: 0 0 10px var(--neon-blue);
-        }
-
-        /* --- CAMERA FEED STYLE --- */
-        .cam-box {
-            width: 100%;
-            height: 180px;
-            background: #000;
-            border: 1px solid var(--border-color);
-            margin-bottom: 20px;
             position: relative;
             overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-        }
-        .cam-box video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            filter: grayscale(100%) contrast(1.2) brightness(0.8); /* Hacker Look */
-            transform: scaleX(-1); /* Mirror effect */
-        }
-        .cam-scan-line {
-            position: absolute;
-            width: 100%;
-            height: 2px;
-            background: var(--neon-blue);
-            box-shadow: 0 0 10px var(--neon-blue);
-            top: 0;
-            left: 0;
-            animation: scanAnim 3s linear infinite;
-            z-index: 5;
-            pointer-events: none;
-        }
-        .face-overlay {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100px; height: 120px;
-            border: 2px dashed var(--neon-green);
-            border-radius: 20px;
-            opacity: 0.5;
-            box-shadow: 0 0 20px var(--neon-green);
-            display: none;
-        }
-        .face-status {
-            position: absolute;
-            bottom: 10px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            color: var(--neon-green);
-            font-size: 0.7rem;
-            background: rgba(0,0,0,0.7);
-            padding: 2px;
-            display: none;
+            transition: 0.3s;
         }
         
-        @keyframes scanAnim {
-            0% { top: 0%; opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { top: 100%; opacity: 0; }
+        /* Holographic Border Animation */
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: conic-gradient(transparent, rgba(0, 243, 255, 0.3), transparent 30%);
+            animation: rotateBorder 4s linear infinite;
+            z-index: -1;
         }
-        .cam-placeholder {
-            color: #333;
-            font-size: 0.7rem;
-            letter-spacing: 2px;
-            text-align: center;
-            font-family: 'Orbitron';
+        .panel::after {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            background: var(--panel-bg);
+            border-radius: 18px;
+            z-index: -1;
         }
+        @keyframes rotateBorder { 100% { transform: rotate(360deg); } }
 
-        /* --- CENTER CONSOLE --- */
+        .panel-title {
+            font-family: 'Orbitron';
+            color: var(--neon-blue);
+            font-size: 1rem;
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        /* --- CENTER CONSOLE (ARC REACTOR STYLE) --- */
         .console-screen {
+            position: relative;
             flex-grow: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            text-align: center;
-            position: relative;
         }
         
-        /* Hexagon Background Effect for Center */
-        .console-screen::before {
-            content: '';
+        /* Arc Reactor Circle */
+        .arc-reactor {
             position: absolute;
-            width: 600px; height: 600px;
-            background: radial-gradient(circle, rgba(0, 243, 255, 0.03) 0%, transparent 70%);
-            z-index: -1;
+            width: 500px; height: 500px;
+            border-radius: 50%;
+            border: 2px dashed rgba(0, 243, 255, 0.2);
+            animation: spinReactor 20s linear infinite;
             pointer-events: none;
+            z-index: -1;
         }
+        .arc-reactor::before {
+            content: ''; position: absolute; top: 10%; left: 10%; right: 10%; bottom: 10%;
+            border-radius: 50%; border: 1px solid rgba(0, 243, 255, 0.1);
+            border-left: 1px solid var(--neon-blue);
+            animation: spinReactor 10s linear infinite reverse;
+        }
+        @keyframes spinReactor { 100% { transform: rotate(360deg); } }
 
-        .phrase-container {
-            margin-bottom: 40px;
+        .input-group {
             position: relative;
-        }
-        
-        .phrase-label {
-            font-size: 0.8rem;
-            color: #666;
-            letter-spacing: 2px;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-        }
-
-        .phrase-highlight {
-            font-size: 2rem;
-            color: #fff;
-            text-shadow: 0 0 15px rgba(255,255,255,0.3);
-            letter-spacing: 3px;
-            font-weight: bold;
-            position: relative;
-            display: inline-block;
-        }
-
-        input[type="text"] {
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid var(--border-color);
-            color: var(--neon-blue);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1.8rem;
-            padding: 20px;
             width: 100%;
             max-width: 600px;
             text-align: center;
+        }
+
+        .phrase-label {
+            font-size: 0.9rem; color: var(--neon-blue); letter-spacing: 2px; margin-bottom: 15px;
+            text-shadow: 0 0 10px var(--neon-blue);
+        }
+        .phrase-highlight {
+            font-size: 2.5rem; font-family: 'Orbitron'; font-weight: 700; color: #fff;
+            text-shadow: 0 0 20px rgba(0, 243, 255, 0.8);
+            margin-bottom: 30px; display: block;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid var(--neon-blue);
+            padding: 25px;
+            font-family: 'JetBrains Mono';
+            font-size: 1.8rem;
+            color: #fff;
+            text-align: center;
+            border-radius: 50px;
             outline: none;
-            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            border-radius: 12px;
-            letter-spacing: 1px;
+            transition: 0.3s;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
         }
         input:focus {
-            box-shadow: 0 0 40px rgba(0, 243, 255, 0.15);
-            border-color: var(--neon-blue);
-            transform: scale(1.02);
+            box-shadow: 0 0 50px rgba(0, 243, 255, 0.5);
+            transform: scale(1.05);
         }
 
         /* --- VISUALIZER --- */
         .visualizer-container {
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            height: 80px;
-            gap: 6px;
-            margin: 40px 0;
-            width: 100%;
-            max-width: 600px;
-            padding: 0 20px;
+            display: flex; gap: 5px; height: 60px; margin-top: 40px; align-items: center; justify-content: center;
         }
         .bar {
-            width: 8px;
-            background: var(--neon-blue);
-            height: 4px;
-            border-radius: 4px;
-            transition: height 0.1s ease, background-color 0.2s;
-            box-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
-            opacity: 0.8;
+            width: 6px; height: 10px; background: var(--neon-blue); border-radius: 10px;
+            transition: 0.1s; box-shadow: 0 0 10px var(--neon-blue);
         }
 
         /* --- BUTTONS --- */
         .controls {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin-top: 20px;
+            display: flex; gap: 20px; justify-content: center; margin-top: 40px;
         }
         
         .cyber-btn {
-            background: rgba(0, 243, 255, 0.05);
+            position: relative;
+            padding: 15px 40px;
+            background: transparent;
             border: 1px solid var(--neon-blue);
             color: var(--neon-blue);
-            padding: 16px 32px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.3s;
-            text-transform: uppercase;
+            font-family: 'Orbitron';
+            font-size: 1rem;
             letter-spacing: 2px;
-            position: relative;
+            cursor: pointer;
             overflow: hidden;
-            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+            transition: 0.4s;
+            z-index: 1;
         }
-        
+        .cyber-btn:hover { color: #000; box-shadow: 0 0 30px var(--neon-blue); border-color: transparent; }
         .cyber-btn::before {
-            content: '';
-            position: absolute;
-            top: 0; left: -100%;
-            width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.2), transparent);
-            transition: 0.5s;
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: var(--neon-blue); z-index: -1; transition: 0.4s;
         }
+        .cyber-btn:hover::before { left: 0; }
         
-        .cyber-btn:hover::before { left: 100%; }
-        
-        .cyber-btn:hover {
-            background: rgba(0, 243, 255, 0.15);
-            text-shadow: 0 0 10px var(--neon-blue);
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
-            transform: translateY(-2px);
-        }
-        
-        .btn-bot {
-            border-color: var(--neon-pink);
-            color: var(--neon-pink);
-            background: rgba(255, 0, 85, 0.05);
-        }
-        .btn-bot:hover {
-            background: rgba(255, 0, 85, 0.15);
-            box-shadow: 0 0 20px rgba(255, 0, 85, 0.2);
-            text-shadow: 0 0 10px var(--neon-pink);
-        }
-        
-        .btn-bot::before { background: linear-gradient(90deg, transparent, rgba(255, 0, 85, 0.2), transparent); }
+        .btn-bot { border-color: var(--neon-pink); color: var(--neon-pink); }
+        .btn-bot:hover { box-shadow: 0 0 30px var(--neon-pink); color: #fff; }
+        .btn-bot::before { background: var(--neon-pink); }
 
-        /* --- TERMINAL --- */
+        /* --- CAMERA FEED --- */
+        .cam-box {
+            position: relative; width: 100%; height: 200px;
+            background: #000; border: 1px solid #333; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 10px; margin-bottom: 20px;
+        }
+        .cam-box video {
+            width: 100%; height: 100%; object-fit: cover;
+            filter: hue-rotate(180deg) contrast(1.2); /* Sci-Fi Look */
+            opacity: 0.8;
+        }
+        .cam-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(0, 243, 255, 0.1) 50%, transparent 50%);
+            background-size: 100% 4px; pointer-events: none; z-index: 2;
+        }
+        .face-tracker {
+            position: absolute; width: 120px; height: 120px;
+            border: 2px solid var(--neon-green); border-radius: 10px;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px var(--neon-green);
+            display: none; animation: pulseTrack 2s infinite;
+        }
+        @keyframes pulseTrack { 0% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); } 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); } }
+
+        /* --- STATS & LOGS --- */
+        .stat-item {
+            display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 1.1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;
+        }
+        .stat-val { font-family: 'Orbitron'; color: #fff; }
+        
         .terminal {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            color: #aaa;
-            overflow-y: auto;
-            height: 100%;
-            text-align: left;
-            padding-right: 5px;
+            font-family: 'JetBrains Mono'; font-size: 0.85rem; color: #888;
+            height: 100%; overflow-y: auto; padding-right: 10px;
         }
-        /* Custom Scrollbar */
-        .terminal::-webkit-scrollbar { width: 5px; }
-        .terminal::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
-        
-        .log-entry { margin-bottom: 8px; border-left: 2px solid transparent; padding-left: 8px; transition: 0.3s; }
-        .log-entry:hover { border-left-color: var(--neon-blue); background: rgba(255,255,255,0.02); }
-        .log-time { color: #555; font-size: 0.7rem; margin-right: 8px; }
-        .log-info { color: var(--neon-blue); }
-        .log-warn { color: var(--neon-pink); }
-        .log-success { color: var(--neon-green); }
+        .log-line { margin-bottom: 8px; padding-left: 10px; border-left: 2px solid transparent; }
+        .log-info { border-left-color: var(--neon-blue); color: var(--neon-blue); }
+        .log-warn { border-left-color: var(--neon-pink); color: var(--neon-pink); }
+        .log-success { border-left-color: var(--neon-green); color: var(--neon-green); }
 
-        /* --- STATS --- */
-        .stat-card {
-            background: rgba(255,255,255,0.03);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        /* --- OVERLAYS --- */
+        #boot-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            font-family: 'Orbitron'; color: var(--neon-blue); font-size: 2rem;
+            animation: fadeOut 1s ease 2s forwards;
         }
-        .stat-label { font-size: 0.8rem; color: #888; }
-        .stat-val { font-family: 'Orbitron', sans-serif; color: #fff; font-size: 1.1rem; }
-        .stat-highlight { color: var(--neon-blue); text-shadow: 0 0 10px rgba(0, 243, 255, 0.5); }
+        @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
 
-        /* --- RESULT OVERLAY --- */
-        #result-overlay {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%) scale(0.9);
-            background: rgba(5, 5, 10, 0.95);
-            border: 1px solid var(--neon-blue);
-            padding: 50px;
-            text-align: center;
-            z-index: 100;
-            display: none;
-            box-shadow: 0 0 100px rgba(0, 0, 0, 0.9);
-            border-radius: 20px;
-            min-width: 450px;
-            backdrop-filter: blur(20px);
-            opacity: 0;
-            transition: 0.3s ease;
+        .loader {
+            width: 200px; height: 4px; background: #333; margin-top: 20px; position: relative;
+        }
+        .loader::after {
+            content: ''; position: absolute; top: 0; left: 0; height: 100%; width: 0%;
+            background: var(--neon-blue); animation: loadBar 2s ease forwards;
+        }
+        @keyframes loadBar { to { width: 100%; } }
+
+        #vault-screen {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 200;
+            flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(10px);
         }
         
-        #result-overlay.active {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
+        .folder-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-top: 50px;
         }
+        .folder {
+            width: 150px; height: 120px; border: 2px solid var(--neon-green);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: var(--neon-green); font-family: 'Orbitron'; cursor: pointer;
+            transition: 0.3s; background: rgba(0, 255, 157, 0.05);
+        }
+        .folder:hover { background: var(--neon-green); color: #000; transform: scale(1.1); box-shadow: 0 0 30px var(--neon-green); }
 
-        .res-icon { font-size: 4rem; margin-bottom: 20px; display: block; }
-        
-        @keyframes pulseDot { 0% { opacity: 0.5; } 50% { opacity: 1; box-shadow: 0 0 15px var(--neon-green); } 100% { opacity: 0.5; } }
     </style>
 </head>
 <body>
 
+    <div id="boot-screen">
+        <div>INITIALIZING CORE SYSTEMS...</div>
+        <div class="loader"></div>
+    </div>
+
+    <div class="bg-animation"></div>
+
     <header>
-        <div class="logo">GHOST<span>-AUTH</span></div>
-        <div class="sys-status">
-            <div class="status-dot"></div>
-            SYSTEM SECURE
+        <div class="logo glitch" data-text="GHOST-AUTH">GHOST-AUTH</div>
+        <div class="sys-status" style="color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green);">
+            ● SYSTEM ONLINE
         </div>
     </header>
 
-    <!-- MAIN DASHBOARD -->
     <div class="dashboard">
         
-        <!-- LEFT PANEL: STATS & CAM -->
+        <!-- LEFT: SENSORS -->
         <div class="panel">
-            <div class="panel-title">OPTICAL SENSOR</div>
-            
+            <div class="panel-title">OPTICAL FEED</div>
             <div class="cam-box" id="cam-box">
-                <div class="cam-placeholder">[ SIGNAL LOST ]<br>ACTIVATE SENSOR</div>
+                <div style="color: #555; font-size: 0.8rem; letter-spacing: 2px;">[ FEED TERMINATED ]</div>
             </div>
-            
-            <button id="btn-cam" class="cyber-btn" style="padding: 10px; font-size: 0.7rem; margin-bottom: 20px;" onclick="enableCamera()">INITIALIZE CAM</button>
+            <div class="face-tracker" id="face-tracker"></div>
+            <button class="cyber-btn" id="btn-cam" onclick="enableCamera()" style="width: 100%; font-size: 0.8rem;">ACTIVATE OPTICS</button>
 
-            <div class="panel-title">LIVE METRICS</div>
-            
-            <div class="stat-card">
-                <span class="stat-label">SUBJECT</span>
-                <span class="stat-val">USER-X</span>
+            <div class="panel-title" style="margin-top: 30px;">BIO-METRICS</div>
+            <div class="stat-item">
+                <span style="color:#888">Flight Vectors</span>
+                <span class="stat-val" id="flight-count">0</span>
             </div>
-            
-            <div class="stat-card">
-                <span class="stat-label">STATUS</span>
-                <span class="stat-val" id="model-status" style="color: #666;">OFFLINE</span>
+            <div class="stat-item">
+                <span style="color:#888">Dwell Vectors</span>
+                <span class="stat-val" id="dwell-count">0</span>
             </div>
-            
-            <div style="margin: 20px 0; height: 1px; background: rgba(255,255,255,0.1);"></div>
-            
-            <div class="stat-card">
-                <span class="stat-label">FLIGHT VECTORS</span>
-                <span class="stat-val stat-highlight" id="flight-count">0</span>
-            </div>
-            
-            <div class="stat-card">
-                <span class="stat-label">DWELL VECTORS</span>
-                <span class="stat-val stat-highlight" id="dwell-count">0</span>
+            <div class="stat-item">
+                <span style="color:#888">Status</span>
+                <span class="stat-val" id="model-status" style="color: #666">STANDBY</span>
             </div>
         </div>
 
-        <!-- CENTER PANEL: CONSOLE -->
-        <div class="panel">
-            <div class="panel-title" id="mode-display">AWAITING COMMAND...</div>
+        <!-- CENTER: INTERACTION -->
+        <div class="panel console-screen">
+            <div class="arc-reactor"></div>
             
-            <div class="console-screen">
-                <div class="phrase-container">
-                    <div class="phrase-label">AUTHENTICATION PASSPHRASE</div>
-                    <div class="phrase-highlight">{{ phrase }}</div>
-                </div>
-
-                <input type="text" id="input-box" placeholder="CLICK TRAIN TO START" autocomplete="off">
-                
-                <div class="visualizer-container" id="visualizer">
-                    <!-- JS will fill bars -->
-                </div>
+            <div class="input-group">
+                <div class="phrase-label">SECURITY PROTOCOL: PASSPHRASE REQUIRED</div>
+                <div class="phrase-highlight">{{ phrase }}</div>
+                <input type="text" id="input-box" placeholder="AWAITING INPUT..." autocomplete="off">
             </div>
+
+            <div class="visualizer-container" id="visualizer"></div>
 
             <div class="controls">
-                <button class="cyber-btn" onclick="setMode('train')">1. Initialize Training</button>
-                <button class="cyber-btn" onclick="attemptVerify()">2. Verify Identity</button>
-                <button class="cyber-btn btn-bot" onclick="attemptBot()">3. Inject Bot Script</button>
+                <button class="cyber-btn" onclick="setMode('train')">1. ENROLL</button>
+                <button class="cyber-btn" onclick="attemptVerify()">2. VERIFY</button>
+                <button class="cyber-btn btn-bot" onclick="attemptBot()">3. HACK</button>
             </div>
         </div>
 
-        <!-- RIGHT PANEL: LOGS -->
+        <!-- RIGHT: LOGS -->
         <div class="panel">
-            <div class="panel-title">TERMINAL</div>
+            <div class="panel-title">SYSTEM LOGS</div>
             <div class="terminal" id="terminal-logs">
-                <div class="log-entry"><span class="log-time">SYS</span> <span class="log-info">Ghost-Auth Engine v2.0 Loaded.</span></div>
-                <div class="log-entry"><span class="log-time">SYS</span> <span class="log-info">Numpy Accelerators Active.</span></div>
-                <div class="log-entry"><span class="log-time">SYS</span> <span class="log-info">Waiting for user enrollment...</span></div>
+                <div class="log-line log-info">System Kernel Loaded... OK</div>
+                <div class="log-line log-info">Numpy Tensor Core... OK</div>
+                <div class="log-line log-info">Waiting for User Interaction...</div>
             </div>
         </div>
 
     </div>
 
-    <!-- SECRET VAULT (HIDDEN UNTIL VERIFIED) -->
-    <div class="secure-vault" id="secure-vault">
-        <div class="vault-container">
-            <h1 style="color: var(--neon-green); font-family: 'Orbitron'; font-size: 3rem; margin-bottom: 10px;">TOP SECRET CLEARANCE</h1>
-            <p style="color: #aaa; letter-spacing: 2px;">IDENTITY CONFIRMED. WELCOME, COMMANDER.</p>
-            
-            <div class="vault-grid">
-                <div class="file-card">
-                    <span class="file-icon">📁</span>
-                    <div>
-                        <div style="font-weight: bold;">NUCLEAR LAUNCH CODES</div>
-                        <div style="font-size: 0.7rem; color: #666;">Encrypted: AES-512</div>
-                    </div>
-                </div>
-                <div class="file-card">
-                    <span class="file-icon">📁</span>
-                    <div>
-                        <div style="font-weight: bold;">AREA 51 BLUEPRINTS</div>
-                        <div style="font-size: 0.7rem; color: #666;">Classification: COSMIC</div>
-                    </div>
-                </div>
-                <div class="file-card">
-                    <span class="file-icon">📁</span>
-                    <div>
-                        <div style="font-weight: bold;">OFFSHORE ACCOUNTS</div>
-                        <div style="font-size: 0.7rem; color: #666;">Swiss Bank Node #9</div>
-                    </div>
-                </div>
-                <div class="file-card">
-                    <span class="file-icon">📁</span>
-                    <div>
-                        <div style="font-weight: bold;">PROJECT GHOST</div>
-                        <div style="font-size: 0.7rem; color: #666;">Status: ACTIVE</div>
-                    </div>
-                </div>
+    <!-- SECRET VAULT -->
+    <div id="vault-screen">
+        <h1 style="color: var(--neon-green); font-size: 4rem; text-shadow: 0 0 30px var(--neon-green); font-family: 'Orbitron'; margin-bottom: 10px;">ACCESS GRANTED</h1>
+        <p style="color: #fff; letter-spacing: 5px; font-family: 'Rajdhani';">WELCOME TO THE MAINFRAME</p>
+        
+        <div class="folder-grid">
+            <div class="folder">
+                <div style="font-size: 2rem;">☢️</div>
+                <div style="margin-top: 10px; font-size: 0.8rem;">LAUNCH CODES</div>
             </div>
-
-            <button class="cyber-btn" style="margin-top: 50px; border-color: var(--neon-pink); color: var(--neon-pink);" onclick="logout()">🔒 LOCK SYSTEM & LOGOUT</button>
-        </div>
-    </div>
-
-    <!-- RESULT POPUP -->
-    <div id="result-overlay">
-        <span id="res-icon" class="res-icon">🔒</span>
-        <h1 id="res-title" style="margin: 0; font-family: 'Orbitron'; letter-spacing: 2px;">ACCESS DENIED</h1>
-        <p id="res-desc" style="color: #888; margin-top: 5px;">Biometric Mismatch Detected</p>
-        
-        <div style="margin: 30px 0; position: relative; height: 4px; background: #333; border-radius: 2px;">
-            <div id="score-bar" style="width: 0%; height: 100%; background: var(--neon-green); border-radius: 2px; transition: width 1s ease;"></div>
+            <div class="folder">
+                <div style="font-size: 2rem;">👽</div>
+                <div style="margin-top: 10px; font-size: 0.8rem;">AREA 51</div>
+            </div>
+            <div class="folder">
+                <div style="font-size: 2rem;">₿</div>
+                <div style="margin-top: 10px; font-size: 0.8rem;">CRYPTO WALLET</div>
+            </div>
         </div>
         
-        <h2 id="res-score" style="font-size: 4rem; margin: 0; font-family: 'Orbitron'; line-height: 1;">0%</h2>
-        <div style="font-size: 0.8rem; color: #666; margin-bottom: 30px;">TRUST SCORE</div>
-        
-        <button class="cyber-btn" onclick="closeResult()">ACKNOWLEDGE</button>
+        <button class="cyber-btn btn-bot" style="margin-top: 50px;" onclick="location.reload()">LOGOUT</button>
     </div>
 
     <script>
+        // ... (Logic remains similar, refined for new UI) ...
         let mode = 'train';
         let flightTimes = [];
         let holdTimes = [];
@@ -626,50 +483,39 @@ HTML_TEMPLATE = """
         const inputBox = document.getElementById('input-box');
         const visualizer = document.getElementById('visualizer');
         const term = document.getElementById('terminal-logs');
-        const modeDisplay = document.getElementById('mode-display');
         const modelStatus = document.getElementById('model-status');
-        const dashboard = document.querySelector('.dashboard');
-        const secureVault = document.getElementById('secure-vault');
         
-        // Init Visualizer
-        for(let i=0; i<30; i++){
+        // Init Visualizer bars
+        for(let i=0; i<20; i++){
             let d = document.createElement('div');
             d.className = 'bar';
             visualizer.appendChild(d);
         }
 
         function log(msg, type='info') {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString([], {hour12: false});
             const div = document.createElement('div');
-            div.className = 'log-entry';
-            let colorClass = type === 'warn' ? 'log-warn' : (type === 'success' ? 'log-success' : 'log-info');
-            div.innerHTML = `<span class="log-time">${timeStr}</span> <span class="${colorClass}">${msg}</span>`;
+            div.className = `log-line log-${type}`;
+            div.innerText = `> ${msg}`;
             term.prepend(div);
         }
 
-        // --- CAMERA LOGIC ---
         function enableCamera() {
              navigator.mediaDevices.getUserMedia({ video: true })
                 .then(stream => {
                     const camBox = document.getElementById('cam-box');
-                    camBox.innerHTML = '<video id="video-feed" autoplay muted playsinline></video><div class="cam-scan-line"></div><div class="face-overlay" id="face-box"></div><div class="face-status" id="face-status">FACE DETECTED</div>';
+                    camBox.innerHTML = '<video id="video-feed" autoplay muted playsinline></video><div class="cam-overlay"></div>';
                     const video = document.getElementById('video-feed');
                     video.srcObject = stream;
                     log("Optical Sensors: ONLINE", "success");
                     document.getElementById('btn-cam').style.display = 'none';
                     isCameraActive = true;
                     
-                    // Simulate face detection lock
-                    setTimeout(() => {
-                        document.getElementById('face-box').style.display = 'block';
-                        document.getElementById('face-status').style.display = 'block';
-                        log("Facial Recognition: USER IDENTIFIED", "success");
-                    }, 2000);
+                    // Show Face Tracker Animation
+                    document.getElementById('face-tracker').style.display = 'block';
                 })
                 .catch(err => {
                     log("Optical Sensors: ERROR " + err, "warn");
-                    alert("Camera not found or permission denied.");
+                    alert("Camera Permission Denied");
                 });
         }
 
@@ -677,25 +523,23 @@ HTML_TEMPLATE = """
             mode = m;
             resetUI();
             if (m === 'train') {
-                modeDisplay.innerText = ">> MODE: TRAINING SEQUENCE";
-                modeDisplay.style.color = "var(--neon-blue)";
-                inputBox.placeholder = "TYPE THE PHRASE...";
-                log("Training Sequence Initiated.", "info");
+                inputBox.placeholder = "TYPE TO ENROLL...";
+                inputBox.style.borderColor = "var(--neon-blue)";
+                log("Mode switched: TRAINING", "info");
             } else if (m === 'verify') {
-                modeDisplay.innerText = ">> MODE: IDENTITY VERIFICATION";
-                modeDisplay.style.color = "var(--neon-green)";
-                inputBox.placeholder = "PROVE YOUR IDENTITY...";
-                log("Verification Sensors Active.", "success");
+                inputBox.placeholder = "VERIFY IDENTITY...";
+                inputBox.style.borderColor = "var(--neon-green)";
+                log("Mode switched: VERIFICATION", "success");
             }
         }
 
         function attemptVerify() {
-            if(!isModelTrained) { alert("⚠️ ERROR: Model Untrained. Run Step 1."); return; }
+            if(!isModelTrained) { alert("⚠️ ERROR: Train Model First!"); return; }
             setMode('verify');
         }
 
         function attemptBot() {
-            if(!isModelTrained) { alert("⚠️ ERROR: Model Untrained. Run Step 1."); return; }
+            if(!isModelTrained) { alert("⚠️ ERROR: Train Model First!"); return; }
             simulateBot();
         }
 
@@ -708,13 +552,12 @@ HTML_TEMPLATE = """
             keyDownMap = {};
             inputBox.focus();
             document.querySelectorAll('.bar').forEach(b => {
-                b.style.height = '4px';
+                b.style.height = '10px';
                 b.style.background = 'var(--neon-blue)';
-                b.style.boxShadow = '0 0 10px rgba(0,243,255,0.5)';
             });
         }
 
-        // --- INPUT LOGIC ---
+        // INPUT LOGIC
         inputBox.addEventListener('keydown', e => {
             if(e.key === 'Enter') return;
             if(!keyDownMap[e.code]) keyDownMap[e.code] = Date.now();
@@ -722,16 +565,12 @@ HTML_TEMPLATE = """
 
         inputBox.addEventListener('keyup', e => {
             let now = Date.now();
-            
-            // Hold Time
             if(keyDownMap[e.code]) {
                 let hold = now - keyDownMap[e.code];
                 holdTimes.push(hold);
                 updateVis(hold);
                 delete keyDownMap[e.code];
             }
-
-            // Flight Time
             if(lastKeyUpTime !== 0) {
                 let flight = now - lastKeyUpTime;
                 flightTimes.push(flight);
@@ -739,7 +578,7 @@ HTML_TEMPLATE = """
             lastKeyUpTime = now;
 
             if(inputBox.value.length === phrase.length) {
-                log("Input sequence complete. analyzing...", "info");
+                log("Analyzing Biometric Vectors...", "info");
                 processData();
             }
         });
@@ -748,21 +587,16 @@ HTML_TEMPLATE = """
             const bars = document.querySelectorAll('.bar');
             for(let i=0; i<bars.length-1; i++) {
                 bars[i].style.height = bars[i+1].style.height;
-                bars[i].style.boxShadow = bars[i+1].style.boxShadow;
-                bars[i].style.background = bars[i+1].style.background;
             }
             let last = bars[bars.length-1];
-            let h = Math.min(val * 1.5, 70);
-            last.style.height = Math.max(h, 4) + 'px';
-            
-            let color = mode === 'bot' ? 'var(--neon-pink)' : 'var(--neon-blue)';
-            last.style.background = color;
-            last.style.boxShadow = `0 0 15px ${color}`;
+            let h = Math.min(val * 1.5, 60);
+            last.style.height = Math.max(h, 10) + 'px';
+            last.style.background = mode === 'bot' ? 'var(--neon-pink)' : 'var(--neon-blue)';
         }
 
         async function processData() {
             if(inputBox.value !== phrase) {
-                log("ERROR: Phrase Mismatch detected.", "warn");
+                log("Phrase Mismatch. Resetting...", "warn");
                 resetUI();
                 return;
             }
@@ -787,90 +621,26 @@ HTML_TEMPLATE = """
                 isModelTrained = true;
                 modelStatus.innerText = "ACTIVE";
                 modelStatus.style.color = "var(--neon-green)";
-                modelStatus.style.textShadow = "0 0 10px var(--neon-green)";
                 document.getElementById('flight-count').innerText = data.details.flight_points;
                 document.getElementById('dwell-count').innerText = data.details.hold_points;
-                log("Biometric Profile Created Successfully.", "success");
-                alert("✅ TRAINING COMPLETE.\\nNow click '2. Verify Identity' to test.");
+                log("Biometric Profile Created.", "success");
+                alert("TRAINING COMPLETE");
                 setMode('verify');
+            } else if (data.status === 'verified') {
+                log(`ACCESS GRANTED. Score: ${data.score}%`, "success");
+                document.getElementById('vault-screen').style.display = 'flex'; // OPEN VAULT
             } else {
-                showOverlay(data);
+                log(`ACCESS DENIED. Score: ${data.score}% (${data.reason})`, "warn");
+                alert(`⛔ ACCESS DENIED\\nScore: ${data.score}%\\nReason: ${data.reason}`);
+                resetUI();
             }
-        }
-
-        function showOverlay(data) {
-            const overlay = document.getElementById('result-overlay');
-            const title = document.getElementById('res-title');
-            const desc = document.getElementById('res-desc');
-            const score = document.getElementById('res-score');
-            const icon = document.getElementById('res-icon');
-            const bar = document.getElementById('score-bar');
-
-            overlay.classList.add('active');
-            overlay.style.display = 'block';
-            
-            if(data.status === 'verified') {
-                title.innerText = "ACCESS GRANTED";
-                title.style.color = "var(--neon-green)";
-                overlay.style.borderColor = "var(--neon-green)";
-                overlay.style.boxShadow = "0 0 50px rgba(0, 255, 157, 0.2)";
-                score.style.color = "var(--neon-green)";
-                icon.innerText = "🔓";
-                bar.style.background = "var(--neon-green)";
-                log(`Identity Verified. Trust Score: ${data.score}%`, "success");
-                
-                // --- UNLOCK VAULT ---
-                setTimeout(() => {
-                    overlay.classList.remove('active');
-                    overlay.style.display = 'none';
-                    dashboard.style.display = 'none';
-                    secureVault.style.display = 'flex';
-                }, 1500); 
-                
-            } else {
-                title.innerText = "ACCESS DENIED";
-                title.style.color = "var(--neon-pink)";
-                overlay.style.borderColor = "var(--neon-pink)";
-                overlay.style.boxShadow = "0 0 50px rgba(255, 0, 85, 0.2)";
-                score.style.color = "var(--neon-pink)";
-                icon.innerText = "🛡️";
-                bar.style.background = "var(--neon-pink)";
-                log(`Security Alert: ${data.reason}`, "warn");
-            }
-            desc.innerText = data.reason || "Biometric Match Confirmed";
-            score.innerText = data.score + "%";
-            
-            // Animate bar
-            setTimeout(() => {
-                bar.style.width = data.score + "%";
-            }, 100);
-        }
-
-        function closeResult() {
-            const overlay = document.getElementById('result-overlay');
-            overlay.classList.remove('active');
-            setTimeout(() => {
-                overlay.style.display = 'none';
-                document.getElementById('score-bar').style.width = '0%';
-            }, 300);
-            resetUI();
-        }
-
-        function logout() {
-            secureVault.style.display = 'none';
-            dashboard.style.display = 'grid';
-            resetUI();
-            log("User Logged Out. System Secured.", "info");
         }
 
         function simulateBot() {
             mode = 'bot';
             resetUI();
-            modeDisplay.innerText = ">> ALERT: BOT SCRIPT DETECTED";
-            modeDisplay.style.color = "var(--neon-pink)";
-            log("WARNING: Automated Script Injection detected...", "warn");
+            log("WARNING: Bot Script Injection Detected", "warn");
             inputBox.disabled = true;
-
             let chars = phrase.split('');
             let i = 0;
             let intv = setInterval(() => {
@@ -886,7 +656,6 @@ HTML_TEMPLATE = """
                 }
             }, 50);
         }
-
     </script>
 </body>
 </html>
@@ -953,6 +722,7 @@ def analyze():
         min_len_f = min(len(curr_flight), len(ref_flight))
         
         # Normalize: Remove 'Average Speed' bias to check 'Relative Rhythm'
+        # Formula: Vector - Mean(Vector)
         curr_f_norm = curr_flight[:min_len_f] - np.mean(curr_flight)
         ref_f_norm = ref_flight[:min_len_f] - np.mean(ref_flight)
         
