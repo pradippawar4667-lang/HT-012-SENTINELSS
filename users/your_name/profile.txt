@@ -1,1 +1,0 @@
-{'username': 'your_name', 'typing_pattern': {'avg_flight': np.float64(0.2031321174958173), 'std_flight': np.float64(0.2721428485525387), 'min_flight': np.float64(0.0018155574798583984), 'max_flight': np.float64(1.4875986576080322), 'typing_speed': 295.37426547643537}, 'created': '2026-02-17 12:02:38.752258'}
