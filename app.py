@@ -17,17 +17,16 @@ except ImportError as e:
 
 # --- CONFIGURATION ---
 app = Flask(__name__)
-# Testing sathi password soppa kela ahe
 TARGET_PHRASE = "hello ghost"
 
-# --- HTML/CSS/JS UI (BIO-TRUST DASHBOARD) ---
+# --- HTML/CSS/JS UI (BIO-TRUST ULTIMATE DASHBOARD) ---
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BIO-TRUST | The Invisible Shield</title>
+    <title>BIO-TRUST | Face & Behavioral Defense</title>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -41,7 +40,7 @@ HTML_TEMPLATE = """
             --border: 1px solid rgba(0, 243, 255, 0.3);
         }
         
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; cursor: crosshair; }
 
         body {
             margin: 0;
@@ -101,15 +100,68 @@ HTML_TEMPLATE = """
         }
         .panel h3 { margin: 0 0 15px 0; color: var(--primary); font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; font-family: 'Share Tech Mono'; }
 
-        /* --- LEFT PANEL: STATS --- */
+        /* --- LEFT PANEL: CAMERA & STATS --- */
+        .cam-container {
+            width: 100%; height: 200px;
+            background: #000; border: 2px solid var(--primary);
+            margin-bottom: 10px; position: relative;
+            overflow: hidden; border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+            transition: 0.3s;
+        }
+        .cam-feed { width: 100%; height: 100%; object-fit: cover; }
+        
+        .cam-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(transparent 50%, rgba(0,243,255,0.1) 50%);
+            background-size: 100% 4px; pointer-events: none;
+        }
+        
+        /* Face Scanner Animation */
+        .face-scan-beam {
+            position: absolute; top: 0; left: 0; width: 100%; height: 5px;
+            background: var(--success);
+            box-shadow: 0 0 20px var(--success);
+            opacity: 0;
+            z-index: 5;
+        }
+        .scanning .face-scan-beam {
+            opacity: 1;
+            animation: scanFace 1.5s ease-in-out infinite;
+        }
+        @keyframes scanFace { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
+
+        /* Face Boxes */
+        .face-box {
+            position: absolute; border: 2px dashed var(--success);
+            display: none; box-shadow: 0 0 20px var(--success);
+            transition: 0.3s;
+        }
+        
+        /* Main User Box */
+        #face-main {
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 100px; height: 120px;
+        }
+        
+        /* Styles for Alert States */
+        .cam-container.alert { border-color: var(--danger); box-shadow: 0 0 30px var(--danger); animation: shakeCam 0.5s infinite; }
+        .cam-container.alert #face-main { border-color: var(--danger); box-shadow: 0 0 20px var(--danger); }
+        
+        @keyframes shakeCam { 0% { transform: translate(0,0); } 25% { transform: translate(2px,2px); } 75% { transform: translate(-2px,-2px); } }
+
+        .cam-status {
+            position: absolute; bottom: 5px; left: 5px; font-size: 0.7rem; color: var(--success); background: rgba(0,0,0,0.7); padding: 2px 5px;
+        }
+
         .stat-card {
             background: rgba(0, 243, 255, 0.05);
             margin-bottom: 15px; padding: 15px;
             border-left: 4px solid var(--primary);
             border-radius: 4px;
         }
-        .stat-val { font-size: 1.5rem; font-family: 'Share Tech Mono'; font-weight: bold; }
-        .stat-label { font-size: 0.8rem; color: #aaa; letter-spacing: 1px; }
+        .stat-val { font-size: 1.2rem; font-family: 'Share Tech Mono'; font-weight: bold; }
+        .stat-label { font-size: 0.7rem; color: #aaa; letter-spacing: 1px; }
 
         /* --- CENTER PANEL: AUTHENTICATION --- */
         .auth-container {
@@ -117,20 +169,19 @@ HTML_TEMPLATE = """
             height: 100%; position: relative;
         }
 
-        /* Shield Animation */
         .shield-ring {
-            width: 260px; height: 260px;
+            width: 200px; height: 200px;
             border: 2px dashed var(--primary);
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             position: relative;
             animation: spinShield 20s linear infinite;
             box-shadow: 0 0 40px rgba(0, 243, 255, 0.2);
             transition: 0.5s;
         }
         .shield-core {
-            width: 180px; height: 180px;
+            width: 140px; height: 140px;
             background: url('https://api.dicebear.com/7.x/bottts/svg?seed=Shield') center/cover;
             border-radius: 50%;
             filter: drop-shadow(0 0 15px var(--primary));
@@ -154,9 +205,9 @@ HTML_TEMPLATE = """
         input:focus { box-shadow: 0 0 50px rgba(0, 243, 255, 0.4); transform: scale(1.02); }
 
         /* Controls */
-        .controls { display: flex; gap: 20px; margin-top: 30px; }
+        .controls { display: flex; gap: 10px; margin-top: 30px; flex-wrap: wrap; justify-content: center; }
         .btn {
-            padding: 12px 30px;
+            padding: 10px 20px;
             background: rgba(0, 243, 255, 0.1);
             border: 1px solid var(--primary);
             color: var(--primary);
@@ -167,6 +218,12 @@ HTML_TEMPLATE = """
         .btn:hover, .btn.active { background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary); }
         .btn-hack { border-color: var(--danger); color: var(--danger); background: rgba(255,0,85,0.1); }
         .btn-hack:hover { background: var(--danger); color: #fff; box-shadow: 0 0 20px var(--danger); }
+        
+        .btn-capture { 
+            border-color: var(--success); color: var(--success); background: rgba(0, 255, 157, 0.1);
+            width: 100%; margin-bottom: 20px; display: none;
+        }
+        .btn-capture:hover { background: var(--success); color: #000; box-shadow: 0 0 30px var(--success); }
 
         /* --- RIGHT PANEL: LIVE LOGS --- */
         .log-terminal {
@@ -195,24 +252,34 @@ HTML_TEMPLATE = """
         }
         .folder:hover { background: var(--success); color: #000; box-shadow: 0 0 40px var(--success); transform: translateY(-5px); }
 
-        /* --- OVERLAY: BOT DETECTED --- */
-        #bot-overlay {
+        /* --- OVERLAY: PIRACY / DANGER --- */
+        #danger-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 0, 0, 0.2); z-index: 200;
+            background: rgba(20, 0, 0, 0.9); z-index: 200;
             display: none; flex-direction: column; align-items: center; justify-content: center;
             backdrop-filter: blur(5px);
+            border: 5px solid var(--danger);
         }
-        .bot-msg {
-            font-size: 4rem; color: var(--danger); font-family: 'Share Tech Mono';
-            text-shadow: 0 0 30px var(--danger);
-            animation: blinkFast 0.5s infinite;
-            background: rgba(0,0,0,0.8); padding: 20px; border: 2px solid var(--danger);
+        .danger-title {
+            font-size: 5rem; color: var(--danger); font-family: 'Share Tech Mono';
+            text-shadow: 0 0 50px var(--danger);
+            animation: blinkFast 0.2s infinite;
+            text-align: center; line-height: 1;
         }
-        @keyframes blinkFast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .danger-sub { color: #fff; font-size: 1.5rem; margin-top: 20px; letter-spacing: 3px; }
+        @keyframes blinkFast { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-        /* Glitch Animation */
         .glitch-anim { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; border-color: var(--danger) !important; box-shadow: 0 0 30px var(--danger) !important; }
         @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+
+        /* DEVICE ANGLE */
+        .angle-meter {
+            height: 4px; width: 100%; background: #333; margin-top: 10px; position: relative;
+        }
+        .angle-val {
+            position: absolute; top: 0; left: 50%; width: 10px; height: 100%; background: var(--primary);
+            transition: left 0.1s;
+        }
 
     </style>
 </head>
@@ -221,7 +288,7 @@ HTML_TEMPLATE = """
     <div class="bg-mesh"></div>
 
     <header>
-        <div class="brand">BIO-TRUST <span style="font-size:0.8rem; color:#888;">// THE INVISIBLE SHIELD</span></div>
+        <div class="brand">BIO-TRUST <span style="font-size:0.8rem; color:#888;">// MULTI-FACTOR DEFENSE</span></div>
         <div class="sys-status">SYSTEM SECURE ●</div>
     </header>
 
@@ -229,18 +296,29 @@ HTML_TEMPLATE = """
         
         <!-- LEFT PANEL -->
         <div class="panel">
-            <h3>THREAT INTELLIGENCE</h3>
-            <div class="stat-card">
-                <div class="stat-label">THREAT LEVEL</div>
-                <div class="stat-val" id="threat-level" style="color:var(--success)">LOW</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">ACTIVE SESSIONS</div>
-                <div class="stat-val">1</div>
+            <h3>OPTICAL SENSOR (FACE ID)</h3>
+            <div class="cam-container" id="cam-container">
+                <video id="video-feed" class="cam-feed" autoplay muted playsinline></video>
+                <div class="cam-overlay"></div>
+                <div class="face-scan-beam"></div>
+                <div id="face-main" class="face-box"></div>
+                <div id="cam-status" class="cam-status">INITIALIZING...</div>
             </div>
             
-            <h3>BIOMETRIC TELEMETRY</h3>
-            <canvas id="rhythmChart" height="150"></canvas>
+            <!-- CAPTURE BUTTON FOR TRAINING -->
+            <button id="btn-capture" class="btn btn-capture" onclick="captureFace()">[ + ] SCAN & ENROLL FACE</button>
+
+            <h3 style="margin-top:20px;">LIVE METRICS</h3>
+            <div class="stat-card">
+                <div class="stat-label">DEVICE ANGLE</div>
+                <div class="stat-val" id="angle-display">0°</div>
+                <div class="angle-meter"><div class="angle-val" id="angle-bar"></div></div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">MOUSE ENTROPY</div>
+                <div class="stat-val" id="mouse-score">0</div>
+            </div>
         </div>
 
         <!-- CENTER PANEL -->
@@ -258,9 +336,9 @@ HTML_TEMPLATE = """
                 </div>
 
                 <div class="controls">
-                    <button class="btn active" id="btn-train" onclick="setMode('train')">ENROLL ID</button>
-                    <button class="btn" id="btn-verify" onclick="setMode('verify')">VERIFY</button>
-                    <button class="btn btn-hack" onclick="simulateHack()">SIMULATE FRAUD</button>
+                    <button class="btn active" id="btn-train" onclick="setMode('train')">1. ENROLL ID</button>
+                    <button class="btn" id="btn-verify" onclick="setMode('verify')">2. VERIFY</button>
+                    <button class="btn btn-hack" style="border-color:#ff9900; color:#ff9900" onclick="triggerWrongFace()">3. TEST WRONG FACE</button>
                 </div>
             </div>
         </div>
@@ -270,9 +348,11 @@ HTML_TEMPLATE = """
             <h3>REAL-TIME ANALYSIS LOGS</h3>
             <div class="log-terminal" id="terminal">
                 <div class="log-entry"><span class="log-time">SYS</span> Initializing Bio-Trust Engine...</div>
-                <div class="log-entry"><span class="log-time">SYS</span> Numpy Vectors Loaded.</div>
-                <div class="log-entry"><span class="log-time">SYS</span> Ready for input.</div>
+                <div class="log-entry"><span class="log-time">SYS</span> Camera Module Loading...</div>
             </div>
+            
+            <h3 style="margin-top:15px;">TYPING RHYTHM</h3>
+            <canvas id="rhythmChart" height="120"></canvas>
         </div>
 
     </div>
@@ -299,10 +379,13 @@ HTML_TEMPLATE = """
         <button class="btn btn-hack" style="margin-top:50px;" onclick="location.reload()">LOCK TERMINAL</button>
     </div>
 
-    <!-- BOT DETECTED OVERLAY -->
-    <div id="bot-overlay">
-        <div class="bot-msg">⚠️ SYSTEM BREACH DETECTED</div>
-        <p style="color:white; font-size:1.5rem; margin-top:20px;">ROBOTIC BEHAVIOR IDENTIFIED</p>
+    <!-- DANGER / PIRACY OVERLAY -->
+    <div id="danger-overlay">
+        <div style="font-size:3rem;">⚠️</div>
+        <div class="danger-title" id="alert-title">DANGER</div>
+        <div class="danger-title" style="font-size:2rem; margin-top:10px;" id="alert-msg">UNRECOGNIZED FACE</div>
+        <p class="danger-sub" id="alert-sub">PIRACY ALERT: UNAUTHORIZED USER</p>
+        <div style="margin-top:30px; font-family:'Share Tech Mono'; color:#aaa;">SYSTEM LOCKDOWN INITIATED...</div>
         <button class="btn" style="margin-top:30px;" onclick="location.reload()">REBOOT SYSTEM</button>
     </div>
 
@@ -314,14 +397,13 @@ HTML_TEMPLATE = """
             data: {
                 labels: ['1', '2', '3', '4', '5', '6'],
                 datasets: [{
-                    label: 'Typing Rhythm (ms)',
+                    label: 'Keystroke Flight (ms)',
                     data: [0, 0, 0, 0, 0, 0],
                     borderColor: '#00f3ff',
                     backgroundColor: 'rgba(0, 243, 255, 0.1)',
                     borderWidth: 2,
                     fill: true,
-                    tension: 0.4,
-                    pointRadius: 2
+                    tension: 0.4
                 }]
             },
             options: {
@@ -336,20 +418,92 @@ HTML_TEMPLATE = """
         let mode = 'train';
         let flightTimes = [];
         let holdTimes = [];
+        let tiltData = [];
+        let mouseEvents = 0;
         let keyDownMap = {};
         let lastKeyUpTime = 0;
         let phrase = "{{ phrase }}";
         let isModelTrained = false;
+        let isFaceTrained = false;
+        let currentFace = 'user'; // 'user' or 'unknown'
 
         const pwdInput = document.getElementById('password-input');
         const terminal = document.getElementById('terminal');
         const shieldRing = document.getElementById('shield-ring');
-        const threatLevel = document.getElementById('threat-level');
-        const vaultScreen = document.getElementById('vault-screen');
         const instruction = document.getElementById('instruction');
-        const botOverlay = document.getElementById('bot-overlay');
+        const dangerOverlay = document.getElementById('danger-overlay');
+        const angleDisplay = document.getElementById('angle-display');
+        const angleBar = document.getElementById('angle-bar');
+        const mouseScoreDisplay = document.getElementById('mouse-score');
+        const faceBox = document.getElementById('face-main');
+        const btnCapture = document.getElementById('btn-capture');
+        const camStatus = document.getElementById('cam-status');
+        const camContainer = document.getElementById('cam-container');
+        const alertTitle = document.getElementById('alert-title');
+        const alertMsg = document.getElementById('alert-msg');
+        const alertSub = document.getElementById('alert-sub');
 
         pwdInput.placeholder = `TYPE: "${phrase}"`;
+
+        // --- AUTO START CAMERA ---
+        window.onload = function() {
+            enableCamera();
+        };
+
+        // --- MOUSE TRACKING ---
+        document.addEventListener('mousemove', (e) => {
+            mouseEvents++;
+            mouseScoreDisplay.innerText = mouseEvents;
+        });
+
+        // --- CAMERA LOGIC ---
+        function enableCamera() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    const video = document.getElementById('video-feed');
+                    video.srcObject = stream;
+                    camStatus.innerText = "CAMERA ACTIVE - MONITORING";
+                    camStatus.style.color = "var(--success)";
+                    log("Optical Sensors: ONLINE", "success");
+                    faceBox.style.display = 'block'; 
+                })
+                .catch(err => {
+                    log("Camera Error: " + err, "warn");
+                    camStatus.innerText = "CAMERA ERROR";
+                    camStatus.style.color = "var(--danger)";
+                    alert("Camera access required for Face ID. Please allow permissions.");
+                });
+        }
+
+        function captureFace() {
+            log("SCANNING FACIAL FEATURES...", "info");
+            camContainer.classList.add('scanning'); // Start animation
+            
+            setTimeout(() => {
+                isFaceTrained = true;
+                currentFace = 'user';
+                log("FACE ID MAP STORED.", "success");
+                camContainer.classList.remove('scanning');
+                btnCapture.style.display = 'none';
+                instruction.innerText = "FACE CAPTURED. NOW TYPE PASSWORD TO TRAIN RHYTHM.";
+                instruction.style.color = "var(--primary)";
+                pwdInput.focus();
+            }, 2000);
+        }
+
+        function triggerWrongFace() {
+            if(!isModelTrained) { alert("Train first!"); return; }
+            log("⚠️ SIMULATION: UNKNOWN FACE DETECTED", "warn");
+            currentFace = 'unknown'; // Switch to intruder
+            camContainer.classList.add('alert');
+            camStatus.innerText = "WARNING: FACE MISMATCH";
+            camStatus.style.color = "var(--danger)";
+            
+            // Immediate Alert
+            setTimeout(() => {
+                loginFail("FACE_MISMATCH");
+            }, 800);
+        }
 
         function log(msg, type='info') {
             const div = document.createElement('div');
@@ -360,27 +514,30 @@ HTML_TEMPLATE = """
         }
 
         function setMode(m) {
-            if (m !== 'train' && !isModelTrained) {
-                alert("⚠️ MODEL NOT TRAINED! Please Enroll First.");
-                setMode('train');
-                return;
-            }
             mode = m;
+            currentFace = 'user'; // Reset face status
             resetUI();
             
             document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
             if(m === 'train') {
                 document.getElementById('btn-train').classList.add('active');
-                instruction.innerText = "TRAINING MODE: TYPE NATURALLY TO CREATE DIGITAL DNA";
+                instruction.innerText = "STEP 1: SCAN FACE, STEP 2: TYPE PASSWORD";
                 instruction.style.color = "var(--primary)";
                 pwdInput.placeholder = `ENROLL: "${phrase}"`;
                 shieldRing.style.borderColor = "var(--primary)";
                 shieldRing.style.boxShadow = "0 0 30px rgba(0, 243, 255, 0.1)";
+                btnCapture.style.display = 'block'; // Show Capture Button
             } else {
+                if (!isModelTrained) {
+                    alert("⚠️ MODEL NOT TRAINED! Please Enroll First.");
+                    setMode('train');
+                    return;
+                }
                 document.getElementById('btn-verify').classList.add('active');
                 instruction.innerText = "SECURITY MODE: VERIFY IDENTITY";
                 instruction.style.color = "#fff";
                 pwdInput.placeholder = "ENTER PASSPHRASE";
+                btnCapture.style.display = 'none';
             }
         }
 
@@ -389,6 +546,8 @@ HTML_TEMPLATE = """
             pwdInput.disabled = false;
             flightTimes = [];
             holdTimes = [];
+            tiltData = [];
+            mouseEvents = 0;
             keyDownMap = {};
             lastKeyUpTime = 0;
             pwdInput.focus();
@@ -396,11 +555,12 @@ HTML_TEMPLATE = """
             pwdInput.classList.remove('glitch-anim');
             shieldRing.style.borderColor = "var(--primary)";
             shieldRing.style.boxShadow = "0 0 30px rgba(0, 243, 255, 0.1)";
-            threatLevel.innerText = "LOW";
-            threatLevel.style.color = "var(--success)";
+            camContainer.classList.remove('alert');
+            camStatus.innerText = "CAMERA ACTIVE - MONITORING";
+            camStatus.style.color = "var(--success)";
         }
 
-        // --- KEYSTROKE CAPTURE ---
+        // --- KEYSTROKE & ANGLE CAPTURE ---
         pwdInput.addEventListener('keydown', e => {
             if(e.key === 'Enter') return;
             if(!keyDownMap[e.code]) keyDownMap[e.code] = Date.now();
@@ -410,18 +570,22 @@ HTML_TEMPLATE = """
             let now = Date.now();
             let hold = 0, flight = 0;
 
+            // Simulate Device Angle
+            let currentTilt = (mode === 'bot') ? 0 : (Math.random() * 10) - 5; 
+            tiltData.push(currentTilt);
+            
+            angleDisplay.innerText = currentTilt.toFixed(1) + "°";
+            angleBar.style.left = (50 + currentTilt * 2) + "%";
+
             if(keyDownMap[e.code]) {
                 hold = now - keyDownMap[e.code];
                 holdTimes.push(hold);
                 delete keyDownMap[e.code];
-                log(`Keystroke Pressure: ${hold}ms`);
             }
             if(lastKeyUpTime !== 0) {
                 flight = now - lastKeyUpTime;
                 flightTimes.push(flight);
-                log(`Flight Latency: ${flight}ms`);
                 
-                // Update Chart Live
                 chart.data.datasets[0].data.shift();
                 chart.data.datasets[0].data.push(flight);
                 chart.update();
@@ -430,7 +594,7 @@ HTML_TEMPLATE = """
 
             if(pwdInput.value.length >= phrase.length) {
                 pwdInput.disabled = true;
-                log("Analyzing Vector Pattern...", "info");
+                log("Processing Biometric Vectors...", "info");
                 setTimeout(processData, 1000);
             }
         });
@@ -442,6 +606,15 @@ HTML_TEMPLATE = """
                 return;
             }
 
+            if (mode === 'train' && !isFaceTrained) {
+                alert("⚠️ PLEASE CAPTURE FACE ID FIRST!");
+                resetUI();
+                return;
+            }
+
+            // Check Face Status
+            let isFaceMatch = (currentFace === 'user');
+
             try {
                 const res = await fetch('/analyze', {
                     method: 'POST',
@@ -450,7 +623,10 @@ HTML_TEMPLATE = """
                         mode: mode === 'bot' ? 'verify' : mode,
                         flight_times: flightTimes,
                         hold_times: holdTimes,
-                        is_bot_simulation: mode === 'bot'
+                        tilt_data: tiltData,
+                        mouse_score: mouseEvents,
+                        is_bot_simulation: false, // Standard verify
+                        face_match: isFaceMatch
                     })
                 });
                 const data = await res.json();
@@ -468,7 +644,6 @@ HTML_TEMPLATE = """
             } catch (error) {
                 console.error("Server Error:", error);
                 log("SERVER CONNECTION FAILED!", "warn");
-                alert("Error connecting to server. Is Python running?");
                 pwdInput.disabled = false;
             }
         }
@@ -483,15 +658,18 @@ HTML_TEMPLATE = """
             
             setTimeout(() => {
                 document.querySelector('.dashboard').style.display = 'none';
-                vaultScreen.style.display = 'flex';
+                document.getElementById('vault-screen').style.display = 'flex';
             }, 1000);
         }
 
         function loginFail(reason) {
-            // Check if it was a bot detection for special overlay
-            if(reason.includes("ROBOTIC")) {
-                botOverlay.style.display = 'flex';
-                log("CRITICAL THREAT: BOT DETECTED", "warn");
+            // Check for FACE MISMATCH
+            if(reason.includes("FACE") || reason === "FACE_MISMATCH") {
+                dangerOverlay.style.display = 'flex';
+                alertTitle.innerText = "SECURITY ALERT";
+                alertMsg.innerText = "UNRECOGNIZED FACE";
+                alertSub.innerText = "UNAUTHORIZED USER DETECTED IN CAMERA";
+                log("CRITICAL: UNKNOWN PERSON DETECTED", "warn");
                 return;
             }
 
@@ -502,51 +680,12 @@ HTML_TEMPLATE = """
             pwdInput.style.borderColor = "var(--danger)";
             shieldRing.style.borderColor = "var(--danger)";
             shieldRing.style.boxShadow = "0 0 50px var(--danger)";
-            threatLevel.innerText = "CRITICAL";
-            threatLevel.style.color = "var(--danger)";
             
             setTimeout(() => {
                 resetUI();
                 instruction.innerText = "RETRY AUTHENTICATION";
                 instruction.style.color = "#888";
-                threatLevel.innerText = "LOW";
-                threatLevel.style.color = "var(--success)";
             }, 3000);
-        }
-
-        function simulateHack() {
-            if(!isModelTrained) { alert("Train first!"); return; }
-            setMode('verify');
-            mode = 'bot';
-            
-            log("⚠️ WARNING: BOT SCRIPT INJECTED", "warn");
-            pwdInput.disabled = true;
-            let chars = phrase.split('');
-            let i = 0;
-            // Use local variable for data to avoid polluting real user data if interrupted
-            flightTimes = [];
-            holdTimes = [];
-            
-            let intv = setInterval(() => {
-                if(i < chars.length) {
-                    pwdInput.value += chars[i];
-                    // Bots have perfect timing (zero variance)
-                    let perfectFlight = 50; 
-                    flightTimes.push(perfectFlight); 
-                    holdTimes.push(80);
-                    
-                    // Update visuals
-                    log(`Bot Keystroke: ${perfectFlight}ms (Suspicious)`);
-                    chart.data.datasets[0].data.shift();
-                    chart.data.datasets[0].data.push(perfectFlight);
-                    chart.update();
-                    
-                    i++;
-                } else {
-                    clearInterval(intv);
-                    processData();
-                }
-            }, 50);
         }
 
     </script>
@@ -555,7 +694,7 @@ HTML_TEMPLATE = """
 """
 
 # --- PYTHON BACKEND LOGIC ---
-user_profile = { "trained": False, "flight_avg": [], "hold_avg": [] }
+user_profile = { "trained": False, "flight_avg": [], "hold_avg": [], "tilt_avg": [] }
 
 @app.route('/')
 def home():
@@ -567,39 +706,34 @@ def analyze():
     mode = data.get('mode')
     flight_times = data.get('flight_times', [])
     hold_times = data.get('hold_times', [])
-    is_bot = data.get('is_bot_simulation', False)
+    tilt_data = data.get('tilt_data', [])
+    face_match = data.get('face_match', True) 
 
-    if not flight_times: return jsonify({"status": "error", "message": "No data"})
+    if not flight_times and mode != 'train': return jsonify({"status": "error", "message": "No data"})
 
     if mode == 'train':
         user_profile["flight_avg"] = flight_times
         user_profile["hold_avg"] = hold_times
+        user_profile["tilt_avg"] = tilt_data
         user_profile["trained"] = True
         return jsonify({"status": "trained"})
 
     elif mode == 'verify':
         if not user_profile["trained"]: return jsonify({"status": "denied", "score": 0, "reason": "Untrained"})
 
+        # Check Face Match FIRST (Highest Priority)
+        if not face_match:
+            return jsonify({"status": "denied", "score": 0, "reason": "DANGER: UNRECOGNIZED FACE (PIRACY ALERT)"})
+
         curr_flight = np.array(flight_times)
         ref_flight = np.array(user_profile["flight_avg"])
-        
-        # Match lengths
         min_len = min(len(curr_flight), len(ref_flight))
-        curr_flight = curr_flight[:min_len]
-        ref_flight = ref_flight[:min_len]
         
-        # Calculate Manhattan Distance (L1 Norm) between vectors
-        flight_diff = np.mean(np.abs(curr_flight - ref_flight))
+        # 1. Rhythm Check
+        flight_diff = np.mean(np.abs(curr_flight[:min_len] - ref_flight[:min_len]))
         score = max(0, 100 - flight_diff)
         
-        # Bot Detection: Check Variance (Standard Deviation)
-        # Humans have variance (shaky hands), Bots have near-zero variance
-        flight_var = np.std(curr_flight)
-        
-        if is_bot or flight_var < 5:
-            return jsonify({"status": "denied", "score": 5, "reason": "ROBOTIC BEHAVIOR DETECTED (ZERO VARIANCE)"})
-        
-        elif score > 50:
+        if score > 50:
             return jsonify({"status": "verified", "score": int(score)})
         else:
             return jsonify({"status": "denied", "score": int(score), "reason": "BEHAVIORAL MISMATCH"})
