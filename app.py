@@ -600,9 +600,9 @@ def analyze():
         curr_f_norm = curr_flight[:min_len_f] - np.mean(curr_flight)
         ref_f_norm = ref_flight[:min_len_f] - np.mean(ref_flight)
         
-        # Compare Patterns
+        # Compare Patterns (More Forgiving: Score = 100 - (Diff / 2))
         flight_diff = np.mean(np.abs(curr_f_norm - ref_f_norm))
-        flight_score = max(0, 100 - flight_diff)
+        flight_score = max(0, 100 - (flight_diff / 1.5)) 
 
         # Layer 2: Hold Time Analysis (STYLE)
         curr_hold = np.array(hold_times)
@@ -614,7 +614,7 @@ def analyze():
         ref_h_norm = ref_hold[:min_len_h] - np.mean(ref_hold)
         
         hold_diff = np.mean(np.abs(curr_h_norm - ref_h_norm))
-        hold_score = max(0, 100 - hold_diff)
+        hold_score = max(0, 100 - (hold_diff / 1.5))
 
         # Combined Trust Score (Weighted)
         final_score = int((flight_score * 0.6) + (hold_score * 0.4))
@@ -631,7 +631,7 @@ def analyze():
                 "reason": "⚠️ Robotic Behavior Detected (Zero Variance)"
             })
         
-        elif final_score > 55: # Slightly relaxed threshold for normalization
+        elif final_score > 45: # Relaxed threshold for humans
             return jsonify({
                 "status": "verified",
                 "score": final_score
