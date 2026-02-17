@@ -193,6 +193,53 @@ HTML_TEMPLATE = """
             box-shadow: 0 0 10px var(--neon-blue);
         }
 
+        /* --- CAMERA FEED STYLE --- */
+        .cam-box {
+            width: 100%;
+            height: 180px;
+            background: #000;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+        .cam-box video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(100%) contrast(1.2) brightness(0.8); /* Hacker Look */
+            transform: scaleX(-1); /* Mirror effect */
+        }
+        .cam-scan-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+            top: 0;
+            left: 0;
+            animation: scanAnim 3s linear infinite;
+            z-index: 5;
+            pointer-events: none;
+        }
+        @keyframes scanAnim {
+            0% { top: 0%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+        .cam-placeholder {
+            color: #333;
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            text-align: center;
+            font-family: 'Orbitron';
+        }
+
         /* --- CENTER CONSOLE --- */
         .console-screen {
             flex-grow: 1;
@@ -414,8 +461,16 @@ HTML_TEMPLATE = """
     <!-- MAIN DASHBOARD -->
     <div class="dashboard">
         
-        <!-- LEFT PANEL: STATS -->
+        <!-- LEFT PANEL: STATS & CAM -->
         <div class="panel">
+            <div class="panel-title">OPTICAL SENSOR</div>
+            
+            <div class="cam-box" id="cam-box">
+                <div class="cam-placeholder">[ SIGNAL LOST ]<br>ACTIVATE SENSOR</div>
+            </div>
+            
+            <button id="btn-cam" class="cyber-btn" style="padding: 10px; font-size: 0.7rem; margin-bottom: 20px;" onclick="enableCamera()">INITIALIZE CAM</button>
+
             <div class="panel-title">LIVE METRICS</div>
             
             <div class="stat-card">
@@ -438,11 +493,6 @@ HTML_TEMPLATE = """
             <div class="stat-card">
                 <span class="stat-label">DWELL VECTORS</span>
                 <span class="stat-val stat-highlight" id="dwell-count">0</span>
-            </div>
-            
-            <div style="margin-top: auto; text-align: center; opacity: 0.5; font-size: 0.7rem;">
-                SECURE CONNECTION ESTABLISHED<br>
-                ENC: AES-256
             </div>
         </div>
 
@@ -572,6 +622,23 @@ HTML_TEMPLATE = """
             let colorClass = type === 'warn' ? 'log-warn' : (type === 'success' ? 'log-success' : 'log-info');
             div.innerHTML = `<span class="log-time">${timeStr}</span> <span class="${colorClass}">${msg}</span>`;
             term.prepend(div);
+        }
+
+        // --- CAMERA LOGIC ---
+        function enableCamera() {
+             navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    const camBox = document.getElementById('cam-box');
+                    camBox.innerHTML = '<video id="video-feed" autoplay muted playsinline></video><div class="cam-scan-line"></div>';
+                    const video = document.getElementById('video-feed');
+                    video.srcObject = stream;
+                    log("Optical Sensors: ONLINE", "success");
+                    document.getElementById('btn-cam').style.display = 'none';
+                })
+                .catch(err => {
+                    log("Optical Sensors: ERROR " + err, "warn");
+                    alert("Camera not found or permission denied.");
+                });
         }
 
         function setMode(m) {
