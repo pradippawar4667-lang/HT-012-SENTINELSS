@@ -1,0 +1,91 @@
+from flask import Flask, render_template, request, jsonify
+import numpy as np
+import json
+import os
+
+app = Flask(__name__)
+
+PROFILE_PATH = "user_profile.json"
+PASSWORD = "ghost123"
+
+def save_profile(profile):
+    with open(PROFILE_PATH, "w") as f:
+        json.dump(profile, f)
+
+def load_profile():
+    if not os.path.exists(PROFILE_PATH):
+        return None
+    with open(PROFILE_PATH, "r") as f:
+        return json.load(f)
+
+def calculate_l1_distance(stored, current):
+    stored_vec = np.array(stored)
+    current_vec = np.array(current)
+    return np.sum(np.abs(stored_vec - current_vec))
+
+def calculate_variance_score(data):
+    return np.std(data)
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+@app.route("/register", methods=["POST"])
+def register():
+    password = request.form.get("password")
+    timings = json.loads(request.form.get("timings"))
+
+    if password != PASSWORD:
+        return jsonify({"status": "error", "message": "Wrong Password!"})
+
+    mean_vector = np.mean(np.array(timings), axis=0).tolist()
+    variance = float(np.std(timings))
+
+    profile = {
+        "vector": mean_vector,
+        "variance": variance
+    }
+
+    save_profile(profile)
+
+    return jsonify({"status": "success", "message": "Profile Created Successfully!"})
+
+@app.route("/login", methods=["POST"])
+def login():
+    password = request.form.get("password")
+    timings = json.loads(request.form.get("timings"))
+
+    if password != PASSWORD:
+        return jsonify({"status": "error", "message": "Wrong Password!"})
+
+    profile = load_profile()
+    if not profile:
+        return jsonify({"status": "error", "message": "No profile found. Register first."})
+
+    l1_distance = calculate_l1_distance(profile["vector"], timings)
+    variance = calculate_variance_score(timings)
+
+    DISTANCE_THRESHOLD = 150
+    VARIANCE_THRESHOLD = 5
+
+    if variance < VARIANCE_THRESHOLD:
+        return jsonify({"status": "blocked", "reason": "Bot Detected!"})
+
+    if l1_distance < DISTANCE_THRESHOLD:
+        new_vector = (
+            np.array(profile["vector"]) * 0.8 +
+            np.array(timings) * 0.2
+        ).tolist()
+
+        profile["vector"] = new_vector
+        save_profile(profile)
+
+        return jsonify({
+            "status": "success",
+            "message": "Authentication Successful!"
+        })
+
+    return jsonify({"status": "blocked", "reason": "Behavior Mismatch!"})
+
+if __name__ == "__main__":
+    app.run(debug=True)
