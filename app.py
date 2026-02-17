@@ -5,472 +5,298 @@ from flask import Flask, render_template_string, request, jsonify
 
 # --- CONFIGURATION ---
 app = Flask(__name__)
+# In a real laptop, this would be the user's actual password
 TARGET_PHRASE = "ghost auth is the future"
 
-# --- HTML/CSS/JS UI (CREATIVE DASHBOARD) ---
+# --- HTML/CSS/JS UI (HACKER LAPTOP LOGIN) ---
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GHOST-AUTH | ULTIMATE UI</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <title>GHOST-OS | ULTRA SECURE</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
+            --bg-dark: #050505;
             --neon-blue: #00f3ff;
-            --neon-pink: #ff0055;
-            --neon-purple: #bc13fe;
-            --neon-gold: #ffd700;
-            --bg-dark: #020204;
-            --panel-bg: rgba(5, 10, 20, 0.65);
-            --border-color: rgba(0, 243, 255, 0.3);
+            --neon-red: #ff2a6d;
+            --neon-green: #05d5fa;
+            --glass-border: 1px solid rgba(0, 243, 255, 0.2);
         }
         
         * { box-sizing: border-box; }
 
         body {
-            background-color: var(--bg-dark);
-            color: #fff;
-            font-family: 'Rajdhani', sans-serif;
             margin: 0;
             height: 100vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            perspective: 1000px;
-        }
-
-        /* --- ADVANCED BACKGROUND --- */
-        .bg-animation {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: 
-                radial-gradient(circle at 50% 50%, rgba(0, 243, 255, 0.05), transparent 60%),
-                linear-gradient(0deg, rgba(0,0,0,0.9), transparent),
-                repeating-linear-gradient(90deg, rgba(0, 243, 255, 0.03) 0px, rgba(0, 243, 255, 0.03) 1px, transparent 1px, transparent 50px),
-                repeating-linear-gradient(0deg, rgba(0, 243, 255, 0.03) 0px, rgba(0, 243, 255, 0.03) 1px, transparent 1px, transparent 50px);
-            z-index: -2;
-            transform: scale(1.1);
-            animation: moveGrid 30s linear infinite;
-        }
-        
-        @keyframes moveGrid {
-            0% { transform: scale(1.1) translate(0, 0) rotate(0deg); }
-            50% { transform: scale(1.15) translate(-20px, -20px) rotate(1deg); }
-            100% { transform: scale(1.1) translate(0, 0) rotate(0deg); }
-        }
-
-        /* Floating Particles (Pseudo-elements) */
-        body::before, body::after {
-            content: '';
-            position: absolute;
-            width: 100%; height: 100%;
-            background-image: radial-gradient(white 1px, transparent 1px);
-            background-size: 50px 50px;
-            opacity: 0.1;
-            z-index: -1;
-            animation: stars 100s linear infinite;
-        }
-        body::after {
-            background-size: 100px 100px;
-            animation: stars 60s linear infinite reverse;
-            opacity: 0.2;
-        }
-        
-        @keyframes stars { from { transform: translateY(0); } to { transform: translateY(-1000px); } }
-
-        /* --- GLITCH TEXT EFFECT --- */
-        .glitch {
-            position: relative;
-            color: #fff;
+            background-color: var(--bg-dark);
+            color: white;
             font-family: 'Orbitron', sans-serif;
-            font-weight: 900;
-            letter-spacing: 5px;
-        }
-        .glitch::before, .glitch::after {
-            content: attr(data-text);
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-dark);
-        }
-        .glitch::before {
-            left: 2px; text-shadow: -1px 0 var(--neon-pink);
-            clip: rect(24px, 550px, 90px, 0);
-            animation: glitch-anim-1 3s infinite linear alternate-reverse;
-        }
-        .glitch::after {
-            left: -2px; text-shadow: -1px 0 var(--neon-blue);
-            clip: rect(85px, 550px, 140px, 0);
-            animation: glitch-anim-2 2s infinite linear alternate-reverse;
-        }
-        
-        @keyframes glitch-anim-1 {
-            0% { clip: rect(20px, 9999px, 80px, 0); }
-            20% { clip: rect(60px, 9999px, 10px, 0); }
-            40% { clip: rect(10px, 9999px, 90px, 0); }
-            60% { clip: rect(80px, 9999px, 20px, 0); }
-            80% { clip: rect(30px, 9999px, 70px, 0); }
-            100% { clip: rect(50px, 9999px, 60px, 0); }
-        }
-        @keyframes glitch-anim-2 {
-            0% { clip: rect(90px, 9999px, 10px, 0); }
-            100% { clip: rect(10px, 9999px, 90px, 0); }
-        }
-
-        /* --- HEADER --- */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 50px;
-            background: rgba(2, 2, 4, 0.8);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            box-shadow: 0 5px 30px rgba(0,0,0,0.5);
-            z-index: 100;
-        }
-        
-        .logo { font-size: 2.5rem; text-transform: uppercase; background: linear-gradient(to right, #fff, var(--neon-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
-        /* --- DASHBOARD LAYOUT --- */
-        .dashboard {
-            display: grid;
-            grid-template-columns: 320px 1fr 320px;
-            gap: 30px;
-            padding: 30px;
-            height: 100%;
-            position: relative;
-        }
-
-        .panel {
-            background: var(--panel-bg);
-            border: 1px solid rgba(0, 243, 255, 0.1);
-            border-radius: 20px;
-            padding: 25px;
-            backdrop-filter: blur(15px);
-            box-shadow: 0 0 40px rgba(0,0,0,0.5);
-            display: flex;
-            flex-direction: column;
-            position: relative;
             overflow: hidden;
-            transition: 0.3s;
-        }
-        
-        /* Holographic Border Animation */
-        .panel::before {
-            content: '';
-            position: absolute;
-            top: -50%; left: -50%; width: 200%; height: 200%;
-            background: conic-gradient(transparent, rgba(0, 243, 255, 0.3), transparent 30%);
-            animation: rotateBorder 4s linear infinite;
-            z-index: -1;
-        }
-        .panel::after {
-            content: '';
-            position: absolute;
-            inset: 2px;
-            background: var(--panel-bg);
-            border-radius: 18px;
-            z-index: -1;
-        }
-        @keyframes rotateBorder { 100% { transform: rotate(360deg); } }
-
-        .panel-title {
-            font-family: 'Orbitron';
-            color: var(--neon-blue);
-            font-size: 1rem;
-            letter-spacing: 3px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
-            padding-bottom: 10px;
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        /* --- CENTER CONSOLE (ARC REACTOR STYLE) --- */
-        .console-screen {
-            position: relative;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
         }
-        
-        /* Arc Reactor Circle */
-        .arc-reactor {
+
+        /* --- SCI-FI BACKGROUND --- */
+        .bg-grid {
             position: absolute;
-            width: 500px; height: 500px;
-            border-radius: 50%;
-            border: 2px dashed rgba(0, 243, 255, 0.2);
-            animation: spinReactor 20s linear infinite;
-            pointer-events: none;
+            top: 0; left: 0; width: 200%; height: 200%;
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+            animation: gridMove 20s linear infinite;
+            z-index: -2;
+        }
+        @keyframes gridMove { 0% { transform: perspective(500px) rotateX(60deg) translateY(0); } 100% { transform: perspective(500px) rotateX(60deg) translateY(40px); } }
+
+        /* Dark Vignette */
+        body::after {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(circle, transparent 40%, #000 90%);
             z-index: -1;
         }
-        .arc-reactor::before {
-            content: ''; position: absolute; top: 10%; left: 10%; right: 10%; bottom: 10%;
-            border-radius: 50%; border: 1px solid rgba(0, 243, 255, 0.1);
-            border-left: 1px solid var(--neon-blue);
-            animation: spinReactor 10s linear infinite reverse;
-        }
-        @keyframes spinReactor { 100% { transform: rotate(360deg); } }
 
-        .input-group {
+        /* --- LOGIN PANEL --- */
+        #login-screen {
             position: relative;
-            width: 100%;
-            max-width: 600px;
-            text-align: center;
-        }
-
-        .phrase-label {
-            font-size: 0.9rem; color: var(--neon-blue); letter-spacing: 2px; margin-bottom: 15px;
-            text-shadow: 0 0 10px var(--neon-blue);
-        }
-        .phrase-highlight {
-            font-size: 2.5rem; font-family: 'Orbitron'; font-weight: 700; color: #fff;
-            text-shadow: 0 0 20px rgba(0, 243, 255, 0.8);
-            margin-bottom: 30px; display: block;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            background: rgba(0,0,0,0.5);
-            border: 2px solid var(--neon-blue);
-            padding: 25px;
-            font-family: 'JetBrains Mono';
-            font-size: 1.8rem;
-            color: #fff;
-            text-align: center;
-            border-radius: 50px;
-            outline: none;
-            transition: 0.3s;
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
-        }
-        input:focus {
-            box-shadow: 0 0 50px rgba(0, 243, 255, 0.5);
-            transform: scale(1.05);
-        }
-
-        /* --- VISUALIZER --- */
-        .visualizer-container {
-            display: flex; gap: 5px; height: 60px; margin-top: 40px; align-items: center; justify-content: center;
-        }
-        .bar {
-            width: 6px; height: 10px; background: var(--neon-blue); border-radius: 10px;
-            transition: 0.1s; box-shadow: 0 0 10px var(--neon-blue);
-        }
-
-        /* --- BUTTONS --- */
-        .controls {
-            display: flex; gap: 20px; justify-content: center; margin-top: 40px;
-        }
-        
-        .cyber-btn {
-            position: relative;
-            padding: 15px 40px;
-            background: transparent;
-            border: 1px solid var(--neon-blue);
-            color: var(--neon-blue);
-            font-family: 'Orbitron';
-            font-size: 1rem;
-            letter-spacing: 2px;
-            cursor: pointer;
-            overflow: hidden;
-            transition: 0.4s;
-            z-index: 1;
-        }
-        .cyber-btn:hover { color: #000; box-shadow: 0 0 30px var(--neon-blue); border-color: transparent; }
-        .cyber-btn::before {
-            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-            background: var(--neon-blue); z-index: -1; transition: 0.4s;
-        }
-        .cyber-btn:hover::before { left: 0; }
-        
-        .btn-bot { border-color: var(--neon-pink); color: var(--neon-pink); }
-        .btn-bot:hover { box-shadow: 0 0 30px var(--neon-pink); color: #fff; }
-        .btn-bot::before { background: var(--neon-pink); }
-
-        /* --- CAMERA FEED --- */
-        .cam-box {
-            position: relative; width: 100%; height: 200px;
-            background: #000; border: 1px solid #333; overflow: hidden;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 10px; margin-bottom: 20px;
-        }
-        .cam-box video {
-            width: 100%; height: 100%; object-fit: cover;
-            filter: hue-rotate(180deg) contrast(1.2); /* Sci-Fi Look */
-            opacity: 0.8;
-        }
-        .cam-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(0, 243, 255, 0.1) 50%, transparent 50%);
-            background-size: 100% 4px; pointer-events: none; z-index: 2;
-        }
-        .face-tracker {
-            position: absolute; width: 120px; height: 120px;
-            border: 2px solid var(--neon-green); border-radius: 10px;
-            top: 50%; left: 50%; transform: translate(-50%, -50%);
-            box-shadow: 0 0 20px var(--neon-green);
-            display: none; animation: pulseTrack 2s infinite;
-        }
-        @keyframes pulseTrack { 0% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); } 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); } }
-
-        /* --- STATS & LOGS --- */
-        .stat-item {
-            display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 1.1rem;
-            border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;
-        }
-        .stat-val { font-family: 'Orbitron'; color: #fff; }
-        
-        .terminal {
-            font-family: 'JetBrains Mono'; font-size: 0.85rem; color: #888;
-            height: 100%; overflow-y: auto; padding-right: 10px;
-        }
-        .log-line { margin-bottom: 8px; padding-left: 10px; border-left: 2px solid transparent; }
-        .log-info { border-left-color: var(--neon-blue); color: var(--neon-blue); }
-        .log-warn { border-left-color: var(--neon-pink); color: var(--neon-pink); }
-        .log-success { border-left-color: var(--neon-green); color: var(--neon-green); }
-
-        /* --- OVERLAYS --- */
-        #boot-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            font-family: 'Orbitron'; color: var(--neon-blue); font-size: 2rem;
-            animation: fadeOut 1s ease 2s forwards;
-        }
-        @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
-
-        .loader {
-            width: 200px; height: 4px; background: #333; margin-top: 20px; position: relative;
-        }
-        .loader::after {
-            content: ''; position: absolute; top: 0; left: 0; height: 100%; width: 0%;
-            background: var(--neon-blue); animation: loadBar 2s ease forwards;
-        }
-        @keyframes loadBar { to { width: 100%; } }
-
-        #vault-screen {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 200;
-            flex-direction: column; align-items: center; justify-content: center;
+            width: 450px;
+            padding: 40px;
+            background: rgba(10, 15, 20, 0.7);
+            border: var(--glass-border);
             backdrop-filter: blur(10px);
+            box-shadow: 0 0 50px rgba(0, 243, 255, 0.1);
+            text-align: center;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: slideUp 0.8s ease-out;
+        }
+        
+        @keyframes slideUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Holographic Border Effect */
+        #login-screen::before {
+            content: ''; position: absolute; inset: -2px;
+            background: conic-gradient(transparent, var(--neon-blue), transparent 30%);
+            z-index: -1; border-radius: 17px;
+            animation: rotateBorder 4s linear infinite;
+        }
+        #login-screen::after {
+            content: ''; position: absolute; inset: 2px;
+            background: rgba(10, 15, 20, 0.9);
+            border-radius: 13px; z-index: -1;
+        }
+        @keyframes rotateBorder { 100% { transform: rotate(360deg); } }
+
+        /* Avatar / Camera */
+        .avatar-box {
+            position: relative;
+            width: 140px; height: 140px;
+            margin-bottom: 20px;
+        }
+        .avatar-img {
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            border: 2px solid var(--neon-blue);
+            background: url('https://api.dicebear.com/7.x/bottts/svg?seed=Ghost') center/cover;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+        }
+        .cam-feed {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--neon-red);
+            display: none; /* Hidden until activated */
+        }
+        .face-scanner {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            border-radius: 50%;
+            border-top: 2px solid var(--neon-blue);
+            animation: spinScan 2s linear infinite;
+            display: none;
+        }
+        @keyframes spinScan { 100% { transform: rotate(360deg); } }
+
+        h1 { margin: 0 0 5px 0; font-size: 1.5rem; letter-spacing: 2px; text-shadow: 0 0 10px var(--neon-blue); }
+        p { margin: 0 0 30px 0; font-size: 0.8rem; color: #aaa; font-family: 'JetBrains Mono'; }
+
+        /* Input Field */
+        .input-group { position: relative; width: 100%; margin-bottom: 20px; }
+        
+        input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #333;
+            color: var(--neon-blue);
+            text-align: center;
+            font-family: 'JetBrains Mono';
+            font-size: 1.1rem;
+            outline: none;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+        input:focus { border-color: var(--neon-blue); box-shadow: 0 0 15px rgba(0, 243, 255, 0.2); }
+        
+        .scan-bar {
+            height: 2px; width: 0%;
+            background: var(--neon-blue);
+            margin: 0 auto;
+            transition: width 0.1s;
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        .status-msg {
+            font-size: 0.75rem; color: #666; margin-top: 10px; font-family: 'JetBrains Mono';
+            height: 20px;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex; gap: 10px; margin-top: 20px;
+        }
+        .btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #ccc; padding: 8px 12px; font-size: 0.7rem; cursor: pointer;
+            transition: 0.3s; font-family: 'Orbitron';
+        }
+        .btn:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 15px var(--neon-blue); }
+        .btn.active { border-color: var(--neon-blue); color: var(--neon-blue); }
+
+        /* --- DESKTOP VAULT (HIDDEN) --- */
+        #desktop-screen {
+            display: none;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #1a2a3a 0%, #000 100%);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 1.5s ease;
+        }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: scale(1.1); } to { opacity: 1; transform: scale(1); } }
+
+        .vault-title {
+            font-size: 3rem; color: var(--neon-green); text-shadow: 0 0 30px var(--neon-green);
+            margin-bottom: 10px;
         }
         
         .folder-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-top: 50px;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; margin-top: 50px;
         }
+        
         .folder {
-            width: 150px; height: 120px; border: 2px solid var(--neon-green);
+            width: 160px; height: 140px;
+            border: 2px solid var(--neon-green);
+            background: rgba(0, 255, 157, 0.05);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: var(--neon-green); font-family: 'Orbitron'; cursor: pointer;
-            transition: 0.3s; background: rgba(0, 255, 157, 0.05);
+            cursor: pointer; transition: 0.3s;
+            position: relative;
         }
-        .folder:hover { background: var(--neon-green); color: #000; transform: scale(1.1); box-shadow: 0 0 30px var(--neon-green); }
+        .folder::before {
+            content: ''; position: absolute; top: -5px; left: -5px; width: 10px; height: 10px;
+            border-top: 2px solid var(--neon-green); border-left: 2px solid var(--neon-green);
+        }
+        .folder::after {
+            content: ''; position: absolute; bottom: -5px; right: -5px; width: 10px; height: 10px;
+            border-bottom: 2px solid var(--neon-green); border-right: 2px solid var(--neon-green);
+        }
+        
+        .folder:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 40px rgba(0, 255, 157, 0.2);
+            background: rgba(0, 255, 157, 0.1);
+        }
+        
+        .folder-icon { font-size: 3rem; margin-bottom: 10px; }
+        .folder-name { font-size: 0.8rem; color: var(--neon-green); letter-spacing: 1px; }
+
+        .logout-btn {
+            position: absolute; top: 30px; right: 30px;
+            background: transparent; border: 1px solid var(--neon-red); color: var(--neon-red);
+            padding: 10px 20px; cursor: pointer; transition: 0.3s;
+        }
+        .logout-btn:hover { background: var(--neon-red); color: #000; box-shadow: 0 0 20px var(--neon-red); }
+
+        .shake { animation: shake 0.4s ease-in-out; border-color: var(--neon-red) !important; }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-10px)} 75%{transform:translateX(10px)} }
 
     </style>
 </head>
 <body>
 
-    <div id="boot-screen">
-        <div>INITIALIZING CORE SYSTEMS...</div>
-        <div class="loader"></div>
+    <div class="bg-grid"></div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen">
+        <div class="avatar-box">
+            <div class="avatar-img" id="avatar-img"></div>
+            <video id="cam-feed" class="cam-feed" autoplay muted playsinline></video>
+            <div class="face-scanner" id="face-scanner"></div>
+        </div>
+
+        <h1>GHOST-OS</h1>
+        <p>SECURE TERMINAL ACCESS</p>
+
+        <div class="input-group">
+            <input type="text" id="password-input" placeholder="ENTER PASSPHRASE" autocomplete="off">
+            <div class="scan-bar" id="scan-bar"></div>
+        </div>
+
+        <div class="status-msg" id="status-msg">SYSTEM LOCKED. AWAITING INPUT.</div>
+
+        <div class="controls">
+            <div class="btn" id="btn-cam" onclick="toggleCamera()">📸 FACE ID</div>
+            <div class="btn active" id="btn-train" onclick="setMode('train')">TRAIN</div>
+            <div class="btn" id="btn-verify" onclick="setMode('verify')">LOGIN</div>
+            <div class="btn" style="color:var(--neon-red); border-color:var(--neon-red);" onclick="simulateBot()">🤖 HACK</div>
+        </div>
     </div>
 
-    <div class="bg-animation"></div>
-
-    <header>
-        <div class="logo glitch" data-text="GHOST-AUTH">GHOST-AUTH</div>
-        <div class="sys-status" style="color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green);">
-            ● SYSTEM ONLINE
-        </div>
-    </header>
-
-    <div class="dashboard">
+    <!-- SECRET DESKTOP (UNLOCKED) -->
+    <div id="desktop-screen">
+        <button class="logout-btn" onclick="location.reload()">🔒 LOCK SYSTEM</button>
         
-        <!-- LEFT: SENSORS -->
-        <div class="panel">
-            <div class="panel-title">OPTICAL FEED</div>
-            <div class="cam-box" id="cam-box">
-                <div style="color: #555; font-size: 0.8rem; letter-spacing: 2px;">[ FEED TERMINATED ]</div>
-            </div>
-            <div class="face-tracker" id="face-tracker"></div>
-            <button class="cyber-btn" id="btn-cam" onclick="enableCamera()" style="width: 100%; font-size: 0.8rem;">ACTIVATE OPTICS</button>
+        <div class="vault-title">ACCESS GRANTED</div>
+        <div style="font-family: 'JetBrains Mono'; color: #aaa;">WELCOME COMMANDER. DECRYPTING FILES...</div>
 
-            <div class="panel-title" style="margin-top: 30px;">BIO-METRICS</div>
-            <div class="stat-item">
-                <span style="color:#888">Flight Vectors</span>
-                <span class="stat-val" id="flight-count">0</span>
-            </div>
-            <div class="stat-item">
-                <span style="color:#888">Dwell Vectors</span>
-                <span class="stat-val" id="dwell-count">0</span>
-            </div>
-            <div class="stat-item">
-                <span style="color:#888">Status</span>
-                <span class="stat-val" id="model-status" style="color: #666">STANDBY</span>
-            </div>
-        </div>
-
-        <!-- CENTER: INTERACTION -->
-        <div class="panel console-screen">
-            <div class="arc-reactor"></div>
-            
-            <div class="input-group">
-                <div class="phrase-label">SECURITY PROTOCOL: PASSPHRASE REQUIRED</div>
-                <div class="phrase-highlight">{{ phrase }}</div>
-                <input type="text" id="input-box" placeholder="AWAITING INPUT..." autocomplete="off">
-            </div>
-
-            <div class="visualizer-container" id="visualizer"></div>
-
-            <div class="controls">
-                <button class="cyber-btn" onclick="setMode('train')">1. ENROLL</button>
-                <button class="cyber-btn" onclick="attemptVerify()">2. VERIFY</button>
-                <button class="cyber-btn btn-bot" onclick="attemptBot()">3. HACK</button>
-            </div>
-        </div>
-
-        <!-- RIGHT: LOGS -->
-        <div class="panel">
-            <div class="panel-title">SYSTEM LOGS</div>
-            <div class="terminal" id="terminal-logs">
-                <div class="log-line log-info">System Kernel Loaded... OK</div>
-                <div class="log-line log-info">Numpy Tensor Core... OK</div>
-                <div class="log-line log-info">Waiting for User Interaction...</div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- SECRET VAULT -->
-    <div id="vault-screen">
-        <h1 style="color: var(--neon-green); font-size: 4rem; text-shadow: 0 0 30px var(--neon-green); font-family: 'Orbitron'; margin-bottom: 10px;">ACCESS GRANTED</h1>
-        <p style="color: #fff; letter-spacing: 5px; font-family: 'Rajdhani';">WELCOME TO THE MAINFRAME</p>
-        
         <div class="folder-grid">
             <div class="folder">
-                <div style="font-size: 2rem;">☢️</div>
-                <div style="margin-top: 10px; font-size: 0.8rem;">LAUNCH CODES</div>
+                <div class="folder-icon">☢️</div>
+                <div class="folder-name">LAUNCH_CODES</div>
             </div>
             <div class="folder">
-                <div style="font-size: 2rem;">👽</div>
-                <div style="margin-top: 10px; font-size: 0.8rem;">AREA 51</div>
+                <div class="folder-icon">🛸</div>
+                <div class="folder-name">AREA_51_LOGS</div>
             </div>
             <div class="folder">
-                <div style="font-size: 2rem;">₿</div>
-                <div style="margin-top: 10px; font-size: 0.8rem;">CRYPTO WALLET</div>
+                <div class="folder-icon">₿</div>
+                <div class="folder-name">SWISS_BANK_KEYS</div>
+            </div>
+            <div class="folder">
+                <div class="folder-icon">🕵️</div>
+                <div class="folder-name">AGENT_ROSTER</div>
+            </div>
+            <div class="folder">
+                <div class="folder-icon">📡</div>
+                <div class="folder-name">SAT_CONTROL</div>
+            </div>
+            <div class="folder">
+                <div class="folder-icon">💾</div>
+                <div class="folder-name">BLACK_BOX</div>
             </div>
         </div>
-        
-        <button class="cyber-btn btn-bot" style="margin-top: 50px;" onclick="location.reload()">LOGOUT</button>
     </div>
 
     <script>
-        // ... (Logic remains similar, refined for new UI) ...
         let mode = 'train';
         let flightTimes = [];
         let holdTimes = [];
@@ -480,124 +306,91 @@ HTML_TEMPLATE = """
         let isModelTrained = false;
         let isCameraActive = false;
 
-        const inputBox = document.getElementById('input-box');
-        const visualizer = document.getElementById('visualizer');
-        const term = document.getElementById('terminal-logs');
-        const modelStatus = document.getElementById('model-status');
-        
-        // Init Visualizer bars
-        for(let i=0; i<20; i++){
-            let d = document.createElement('div');
-            d.className = 'bar';
-            visualizer.appendChild(d);
-        }
+        const pwdInput = document.getElementById('password-input');
+        const scanBar = document.getElementById('scan-bar');
+        const statusMsg = document.getElementById('status-msg');
+        const loginScreen = document.getElementById('login-screen');
+        const desktopScreen = document.getElementById('desktop-screen');
 
-        function log(msg, type='info') {
-            const div = document.createElement('div');
-            div.className = `log-line log-${type}`;
-            div.innerText = `> ${msg}`;
-            term.prepend(div);
-        }
-
-        function enableCamera() {
-             navigator.mediaDevices.getUserMedia({ video: true })
-                .then(stream => {
-                    const camBox = document.getElementById('cam-box');
-                    camBox.innerHTML = '<video id="video-feed" autoplay muted playsinline></video><div class="cam-overlay"></div>';
-                    const video = document.getElementById('video-feed');
-                    video.srcObject = stream;
-                    log("Optical Sensors: ONLINE", "success");
-                    document.getElementById('btn-cam').style.display = 'none';
-                    isCameraActive = true;
-                    
-                    // Show Face Tracker Animation
-                    document.getElementById('face-tracker').style.display = 'block';
-                })
-                .catch(err => {
-                    log("Optical Sensors: ERROR " + err, "warn");
-                    alert("Camera Permission Denied");
-                });
-        }
+        pwdInput.placeholder = `TYPE: "${phrase}"`;
 
         function setMode(m) {
             mode = m;
             resetUI();
-            if (m === 'train') {
-                inputBox.placeholder = "TYPE TO ENROLL...";
-                inputBox.style.borderColor = "var(--neon-blue)";
-                log("Mode switched: TRAINING", "info");
-            } else if (m === 'verify') {
-                inputBox.placeholder = "VERIFY IDENTITY...";
-                inputBox.style.borderColor = "var(--neon-green)";
-                log("Mode switched: VERIFICATION", "success");
+            document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+            
+            if(m === 'train') {
+                document.getElementById('btn-train').classList.add('active');
+                statusMsg.innerText = "TRAINING MODE: TYPE NATURALLY TO ENROLL.";
+                statusMsg.style.color = "var(--neon-blue)";
+                pwdInput.placeholder = `ENROLL: "${phrase}"`;
+            } else {
+                if(!isModelTrained) { alert("⚠️ SYSTEM ERROR: MODEL NOT TRAINED."); setMode('train'); return; }
+                document.getElementById('btn-verify').classList.add('active');
+                statusMsg.innerText = "LOGIN MODE: AUTHENTICATE YOURSELF.";
+                statusMsg.style.color = "#fff";
+                pwdInput.placeholder = "ENTER PASSPHRASE";
             }
         }
 
-        function attemptVerify() {
-            if(!isModelTrained) { alert("⚠️ ERROR: Train Model First!"); return; }
-            setMode('verify');
-        }
-
-        function attemptBot() {
-            if(!isModelTrained) { alert("⚠️ ERROR: Train Model First!"); return; }
-            simulateBot();
+        function toggleCamera() {
+            if(!isCameraActive) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    const vid = document.getElementById('cam-feed');
+                    vid.srcObject = stream;
+                    vid.style.display = 'block';
+                    document.getElementById('face-scanner').style.display = 'block';
+                    isCameraActive = true;
+                    document.getElementById('btn-cam').classList.add('active');
+                    statusMsg.innerText = "OPTICAL SENSORS ACTIVE.";
+                })
+                .catch(e => alert("CAMERA ACCESS DENIED"));
+            }
         }
 
         function resetUI() {
-            inputBox.value = '';
-            inputBox.disabled = false;
             flightTimes = [];
             holdTimes = [];
-            lastKeyUpTime = 0;
             keyDownMap = {};
-            inputBox.focus();
-            document.querySelectorAll('.bar').forEach(b => {
-                b.style.height = '10px';
-                b.style.background = 'var(--neon-blue)';
-            });
+            lastKeyUpTime = 0;
+            pwdInput.classList.remove('shake');
+            scanBar.style.width = '0%';
+            pwdInput.value = "";
+            pwdInput.disabled = false;
+            pwdInput.focus();
         }
 
-        // INPUT LOGIC
-        inputBox.addEventListener('keydown', e => {
+        // --- TYPING LOGIC ---
+        pwdInput.addEventListener('keydown', e => {
             if(e.key === 'Enter') return;
             if(!keyDownMap[e.code]) keyDownMap[e.code] = Date.now();
         });
 
-        inputBox.addEventListener('keyup', e => {
+        pwdInput.addEventListener('keyup', e => {
             let now = Date.now();
+            let progress = (pwdInput.value.length / phrase.length) * 100;
+            scanBar.style.width = `${progress}%`;
+
             if(keyDownMap[e.code]) {
-                let hold = now - keyDownMap[e.code];
-                holdTimes.push(hold);
-                updateVis(hold);
+                holdTimes.push(now - keyDownMap[e.code]);
                 delete keyDownMap[e.code];
             }
             if(lastKeyUpTime !== 0) {
-                let flight = now - lastKeyUpTime;
-                flightTimes.push(flight);
+                flightTimes.push(now - lastKeyUpTime);
             }
             lastKeyUpTime = now;
 
-            if(inputBox.value.length === phrase.length) {
-                log("Analyzing Biometric Vectors...", "info");
-                processData();
+            if(pwdInput.value.length >= phrase.length) {
+                pwdInput.disabled = true;
+                statusMsg.innerText = "PROCESSING BIOMETRIC VECTORS...";
+                setTimeout(processData, 600);
             }
         });
 
-        function updateVis(val) {
-            const bars = document.querySelectorAll('.bar');
-            for(let i=0; i<bars.length-1; i++) {
-                bars[i].style.height = bars[i+1].style.height;
-            }
-            let last = bars[bars.length-1];
-            let h = Math.min(val * 1.5, 60);
-            last.style.height = Math.max(h, 10) + 'px';
-            last.style.background = mode === 'bot' ? 'var(--neon-pink)' : 'var(--neon-blue)';
-        }
-
         async function processData() {
-            if(inputBox.value !== phrase) {
-                log("Phrase Mismatch. Resetting...", "warn");
-                resetUI();
+            if(pwdInput.value !== phrase) {
+                loginFail("INVALID PASSPHRASE");
                 return;
             }
 
@@ -613,42 +406,52 @@ HTML_TEMPLATE = """
                 })
             });
             const data = await res.json();
-            handleResult(data);
-        }
-
-        function handleResult(data) {
+            
             if(data.status === 'trained') {
                 isModelTrained = true;
-                modelStatus.innerText = "ACTIVE";
-                modelStatus.style.color = "var(--neon-green)";
-                document.getElementById('flight-count').innerText = data.details.flight_points;
-                document.getElementById('dwell-count').innerText = data.details.hold_points;
-                log("Biometric Profile Created.", "success");
-                alert("TRAINING COMPLETE");
+                alert("✅ ENROLLMENT COMPLETE.\\nSYSTEM LOCKED. PROCEED TO LOGIN.");
                 setMode('verify');
             } else if (data.status === 'verified') {
-                log(`ACCESS GRANTED. Score: ${data.score}%`, "success");
-                document.getElementById('vault-screen').style.display = 'flex'; // OPEN VAULT
+                loginSuccess(data.score);
             } else {
-                log(`ACCESS DENIED. Score: ${data.score}% (${data.reason})`, "warn");
-                alert(`⛔ ACCESS DENIED\\nScore: ${data.score}%\\nReason: ${data.reason}`);
-                resetUI();
+                loginFail(data.reason);
             }
         }
 
+        function loginSuccess(score) {
+            statusMsg.innerText = `IDENTITY CONFIRMED. TRUST SCORE: ${score}%`;
+            statusMsg.style.color = "var(--neon-green)";
+            pwdInput.style.borderColor = "var(--neon-green)";
+            
+            setTimeout(() => {
+                loginScreen.style.display = 'none';
+                desktopScreen.style.display = 'flex';
+            }, 1000);
+        }
+
+        function loginFail(reason) {
+            pwdInput.classList.add('shake');
+            statusMsg.innerText = `⛔ ACCESS DENIED: ${reason}`;
+            statusMsg.style.color = "var(--neon-red)";
+            setTimeout(resetUI, 2000);
+        }
+
         function simulateBot() {
+            if(!isModelTrained) { alert("TRAIN FIRST!"); return; }
+            setMode('verify');
             mode = 'bot';
-            resetUI();
-            log("WARNING: Bot Script Injection Detected", "warn");
-            inputBox.disabled = true;
+            
+            statusMsg.innerText = "⚠️ DETECTED: BOT INJECTION ATTACK...";
+            statusMsg.style.color = "var(--neon-red)";
+            pwdInput.disabled = true;
+
             let chars = phrase.split('');
             let i = 0;
             let intv = setInterval(() => {
                 if(i < chars.length) {
-                    inputBox.value += chars[i];
-                    flightTimes.push(50);
+                    pwdInput.value += chars[i];
+                    flightTimes.push(50); 
                     holdTimes.push(80);
-                    updateVis(80);
                     i++;
                 } else {
                     clearInterval(intv);
@@ -722,7 +525,6 @@ def analyze():
         min_len_f = min(len(curr_flight), len(ref_flight))
         
         # Normalize: Remove 'Average Speed' bias to check 'Relative Rhythm'
-        # Formula: Vector - Mean(Vector)
         curr_f_norm = curr_flight[:min_len_f] - np.mean(curr_flight)
         ref_f_norm = ref_flight[:min_len_f] - np.mean(ref_flight)
         
@@ -748,16 +550,12 @@ def analyze():
             face_score = 98 # Simulated High Match for Demo
         
         # Combined Trust Score (Weighted)
-        # If camera active: 30% Flight, 30% Hold, 40% Face
-        # Else: 60% Flight, 40% Hold
-        
         if camera_active:
             final_score = int((flight_score * 0.3) + (hold_score * 0.3) + (face_score * 0.4))
         else:
             final_score = int((flight_score * 0.6) + (hold_score * 0.4))
         
         # --- BOT DETECTION (The Trap) ---
-        # Check variance of BOTH dimensions. Bots are too stable.
         flight_var = np.std(curr_flight)
         hold_var = np.std(curr_hold)
         
@@ -765,22 +563,22 @@ def analyze():
             return jsonify({
                 "status": "denied",
                 "score": 5,
-                "reason": "⚠️ Robotic Behavior Detected (Zero Variance)"
+                "reason": "⚠️ ROBOTIC BEHAVIOR (ZERO VARIANCE)"
             })
         
         elif final_score > 45: # Relaxed threshold for humans
-            reason_text = "Multi-Factor Authentication Success" if camera_active else "Biometric Match Confirmed"
+            reason_text = "FACE + BEHAVIOR MATCH CONFIRMED" if camera_active else "BEHAVIORAL MATCH CONFIRMED"
             return jsonify({
                 "status": "verified",
                 "score": final_score,
                 "reason": reason_text
             })
         else:
-            reason = "Typing Speed/Rhythm changed" if flight_score < hold_score else "Key Hold Time (Pressure) changed"
+            reason = "TYPING RHYTHM CHANGED" if flight_score < hold_score else "KEY PRESSURE CHANGED"
             return jsonify({
                 "status": "denied",
                 "score": final_score,
-                "reason": f"IDENTITY MISMATCH: {reason}"
+                "reason": f"BIOMETRIC MISMATCH: {reason}"
             })
 
 if __name__ == '__main__':
